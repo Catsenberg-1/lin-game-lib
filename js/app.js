@@ -27,10 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========================
   // 状态
   // ========================
-  let currentSpread  = 'no-spread';   // 当前牌阵
-  let selectedCards  = [];            // 已选中的牌索引
-  let fanDeck        = [];            // 洗牌后的 78 张牌顺序
-  let drawnCards     = [];            // 最终抽出的 3 张牌数据
+  let currentSpread  = 'no-spread';
+  let selectedIndices = [];        // 已选中的牌在 fanDeck 中的索引
+  let fanDeck        = [];        // 洗牌后的 78 张牌顺序
+  let drawnCards     = [];        // 最终抽出的 3 张牌数据
 
   // ========================
   // 视图切换
@@ -73,14 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 返回牌阵选择
   document.getElementById('btn-back-to-spread').addEventListener('click', () => {
-    selectedCards = [];
-    updateSelectionUI();
+    selectedIndices = [];
+    updateSlots();
     showView('spreadSelect');
   });
 
   // 确认选择 → 进入结果
   confirmBtn.addEventListener('click', () => {
-    if (selectedCards.length === 3) {
+    if (selectedIndices.length === 3) {
       showResults();
     }
   });
@@ -90,12 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSelection();
   });
 
-  // 结果页 → 返回选牌
+  // 结果页 → 返回牌阵
   document.getElementById('btn-result-back').addEventListener('click', () => {
     showView('spreadSelect');
   });
 
-  // 重新洗牌
+  // 重新洗牌（从结果页）
   document.getElementById('btn-redraw').addEventListener('click', () => {
     showView('tarotDraw');
     startFanDraw();
@@ -107,18 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ========================
-  // Loading 动画 — 扇面360°展开收起
+  // Loading 动画 — 扇面 360° 展开收起
   // ========================
   function showLoading(duration = 2200) {
     return new Promise(resolve => {
-      // 生成 loading 卡牌
       loadingFan.innerHTML = '';
       const cardCount = 36;
       for (let i = 0; i < cardCount; i++) {
         const card = document.createElement('div');
         card.className = 'loading-card';
         card.style.setProperty('--angle', `${(i / cardCount) * 360}deg`);
-        card.style.animationDelay = `${(i / cardCount) * 0.4}s`;
+        card.style.animationDelay = `${(i / cardCount) * 0.3}s`;
         loadingFan.appendChild(card);
       }
 
@@ -132,22 +131,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================
-  // 扇面抽牌流程
+  // 扇面抽牌流程入口
   // ========================
   async function startFanDraw() {
-    // 重置
-    selectedCards = [];
+    selectedIndices = [];
     drawnCards = [];
-    updateSelectionUI();
+    updateSlots();
     confirmBtn.disabled = true;
+    drawTitle.textContent = '🃏 请从扇面中选取 3 张牌';
 
-    // 洗牌效果
     await showLoading(2200);
 
-    // 洗牌：随机排列 78 张
     fanDeck = [...getAllCards()].sort(() => Math.random() - 0.5);
-
-    // 渲染扇面
     renderFan();
   }
 
@@ -156,137 +151,186 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========================
   function renderFan() {
     fanContainer.innerHTML = '';
-    const total = fanDeck.length; // 78
+    const total = fanDeck.length;
 
-    // 扇面参数
     const stage = document.querySelector('.fan-stage');
     const stageWidth = stage.clientWidth;
     const stageHeight = stage.clientHeight;
 
-    // 扇面圆心在底部偏下（制造弧形效果）
     const cx = stageWidth / 2;
     const cy = stageHeight + 120;
-
-    // 半径
     const radius = Math.min(stageWidth * 0.65, 520);
-
-    // 角度范围：中间重叠少，两侧展开
-    const arcDeg = Math.min(140, 100 + (78 / 100) * 40);
+    const arcDeg = 140;
     const startAngle = -arcDeg / 2;
     const endAngle = arcDeg / 2;
 
-    // 先计算所有位置
-    const positions = [];
     fanDeck.forEach((card, i) => {
       const angleDeg = startAngle + (i / (total - 1)) * (endAngle - startAngle);
       const angleRad = (angleDeg * Math.PI) / 180;
 
       const x = cx + radius * Math.sin(angleRad);
       const y = cy - radius * Math.cos(angleRad);
-
-      positions.push({ x, y, angleDeg, rotate: angleDeg * 0.7 });
-    });
-
-    // 创建卡牌 DOM
-    fanDeck.forEach((card, i) => {
-      const { x, y, rotate } = positions[i];
+      const rotate = angleDeg * 0.7;
       const halfW = 30;
       const halfH = 48;
 
       const el = document.createElement('div');
       el.className = 'fan-card';
       el.dataset.index = i;
-
-      // 起始状态：从中心飞出
       el.style.transform = `translate(${cx - halfW}px, ${cy - halfH - 150}px) rotate(0deg) scale(0.3)`;
       el.style.opacity = '0';
       el.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
 
       el.innerHTML = `<div class="fan-card-inner"></div>`;
 
-      // 点击事件
-      el.addEventListener('click', () => onCardClick(i, el));
+      el.addEventListener('click', (e) => onCardClick(i, el, e));
 
       fanContainer.appendChild(el);
 
-      // 延迟后飞入最终位置
+      // 飞入最终位置
       setTimeout(() => {
         el.style.transform = `translate(${x - halfW}px, ${y - halfH}px) rotate(${rotate}deg) scale(1)`;
         el.style.opacity = '1';
-        el.style.transition = 'transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease';
+        el.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
       }, 30 + i * 10);
     });
   }
 
   // ========================
-  // 卡牌点击处理
+  // 卡牌点击 — 选中/取消 飞入卡槽
   // ========================
-  function onCardClick(index, el) {
-    // 检查是否已选中
-    const alreadyIdx = selectedCards.indexOf(index);
-
-    if (alreadyIdx >= 0) {
-      // 取消选中
-      selectedCards.splice(alreadyIdx, 1);
-      el.classList.remove('selected');
-    } else {
-      if (selectedCards.length >= 3) {
-        // 已满 3 张，先取消最早的一张
-        const removedIdx = selectedCards.shift();
-        const removedEl = fanContainer.querySelector(`[data-index="${removedIdx}"]`);
-        if (removedEl) removedEl.classList.remove('selected');
+  function onCardClick(index, el, event) {
+    // 如果已选中 → 取消选中
+    if (el.classList.contains('picked')) {
+      el.classList.remove('picked');
+      el.style.pointerEvents = '';
+      const pos = selectedIndices.indexOf(index);
+      if (pos >= 0) {
+        selectedIndices.splice(pos, 1);
       }
-      selectedCards.push(index);
-      el.classList.add('selected');
+      updateSlots();
+      drawTitle.textContent = selectedIndices.length > 0
+        ? `🃏 已选 ${selectedIndices.length} / 3 张牌`
+        : '🃏 请从扇面中选取 3 张牌';
+      confirmBtn.disabled = true;
+      return;
     }
 
-    updateSelectionUI();
-    drawTitle.textContent = `🃏 已选 ${selectedCards.length} / 3 张牌`;
+    // 已满 3 张，不允许再加
+    if (selectedIndices.length >= 3) return;
+
+    // 标记为已选
+    el.classList.add('picked');
+    selectedIndices.push(index);
+
+    // 飞行动画
+    const cardRect = el.getBoundingClientRect();
+    const slotIndex = selectedIndices.length - 1;
+    flyCardToSlot(cardRect, slotIndex);
+
+    updateSlots();
+    drawTitle.textContent = `🃏 已选 ${selectedIndices.length} / 3 张牌`;
+
+    if (selectedIndices.length === 3) {
+      confirmBtn.disabled = false;
+      drawTitle.textContent = '✨ 已选 3 张，请确认';
+    }
   }
 
   // ========================
-  // 已选区 UI 更新
+  // 卡牌飞入卡槽动画
   // ========================
-  function updateSelectionUI() {
-    selectedCardsEl.innerHTML = '';
+  function flyCardToSlot(fromRect, slotIndex) {
+    // 获取目标卡槽位置
+    const slots = selectedCardsEl.querySelectorAll('.selected-slot');
+    const targetSlot = slots[slotIndex];
+    if (!targetSlot) return;
 
-    for (let i = 0; i < 3; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'selected-slot';
+    const toRect = targetSlot.getBoundingClientRect();
 
-      if (i < selectedCards.length) {
-        slot.classList.add('filled');
-        const cardData = fanDeck[selectedCards[i]];
-        slot.textContent = cardData.nameZh;
-        slot.title = cardData.nameEn;
-      } else {
-        slot.textContent = `第${i + 1}张`;
+    // 创建飞行克隆
+    const fly = document.createElement('div');
+    fly.className = 'fly-card';
+    fly.style.position = 'fixed';
+    fly.style.left = fromRect.left + 'px';
+    fly.style.top = fromRect.top + 'px';
+    fly.style.width = fromRect.width + 'px';
+    fly.style.height = fromRect.height + 'px';
+    fly.style.transform = 'rotate(0deg)';
+    fly.style.transition = 'none';
+    document.body.appendChild(fly);
+
+    // 强制 reflow 再设置目标
+    fly.offsetHeight;
+
+    const dx = toRect.left + toRect.width / 2 - (fromRect.left + fromRect.width / 2);
+    const dy = toRect.top + toRect.height / 2 - (fromRect.top + fromRect.height / 2);
+
+    fly.style.transition = 'all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    fly.style.transform = `translate(${dx}px, ${dy}px) scale(${toRect.width / fromRect.width})`;
+
+    // 动画结束后移除克隆，高亮卡槽
+    fly.addEventListener('transitionend', () => {
+      fly.remove();
+      // 卡槽弹跳
+      targetSlot.classList.add('filled');
+      targetSlot.offsetHeight;
+    });
+  }
+
+  // ========================
+  // 更新底部卡槽显示
+  // ========================
+  function updateSlots() {
+    // 保留已有 slot 元素，只更新状态
+    const existingSlots = selectedCardsEl.querySelectorAll('.selected-slot');
+    const existingArr = Array.from(existingSlots);
+
+    // 如果 slot 数量不对，重建
+    if (existingArr.length !== 3) {
+      selectedCardsEl.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'selected-slot';
+        if (i < selectedIndices.length) {
+          slot.classList.add('filled');
+        } else {
+          slot.textContent = `第${i + 1}张`;
+        }
+        selectedCardsEl.appendChild(slot);
       }
-
-      selectedCardsEl.appendChild(slot);
-    }
-
-    // 更新按钮状态
-    confirmBtn.disabled = selectedCards.length !== 3;
-    confirmBtn.textContent = `确认选择 (${selectedCards.length}/3)`;
-
-    if (selectedCards.length > 0) {
-      clearBtn.style.display = 'inline-block';
     } else {
-      clearBtn.style.display = 'none';
+      // 只更新每个 slot 的 class
+      existingArr.forEach((slot, i) => {
+        if (i < selectedIndices.length) {
+          if (!slot.classList.contains('filled')) {
+            slot.classList.add('filled');
+            slot.textContent = '';
+          }
+        } else {
+          slot.classList.remove('filled');
+          slot.textContent = `第${i + 1}张`;
+        }
+      });
     }
+
+    confirmBtn.disabled = selectedIndices.length !== 3;
+    confirmBtn.textContent = `确认选择 (${selectedIndices.length}/3)`;
+
+    clearBtn.style.display = selectedIndices.length > 0 ? 'inline-block' : 'none';
   }
 
   // ========================
   // 清除选择
   // ========================
   function clearSelection() {
-    // 移除所有选中状态
-    document.querySelectorAll('.fan-card.selected').forEach(el => {
-      el.classList.remove('selected');
+    document.querySelectorAll('.fan-card.picked').forEach(el => {
+      el.classList.remove('picked');
+      el.style.pointerEvents = '';
     });
-    selectedCards = [];
-    updateSelectionUI();
+    selectedIndices = [];
+    updateSlots();
+    confirmBtn.disabled = true;
     drawTitle.textContent = '🃏 请从扇面中选取 3 张牌';
   }
 
@@ -294,18 +338,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // 显示结果
   // ========================
   function showResults() {
-    // 获取选中的牌数据
-    drawnCards = selectedCards.map(i => fanDeck[i]);
-
-    // 切换到结果视图
+    drawnCards = selectedIndices.map(i => fanDeck[i]);
     showView('tarotResult');
-
-    // 渲染结果卡牌
     renderResults();
   }
 
   // ========================
-  // 渲染结果卡牌
+  // 渲染结果卡牌（背面朝上，点击翻转）
   // ========================
   function renderResults() {
     resultCardsEl.innerHTML = '';
@@ -351,22 +390,15 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
       if (views.tarotDraw.classList.contains('active') && fanDeck.length > 0) {
-        // 保存当前选中
-        const savedSelection = [...selectedCards];
+        const saved = [...selectedIndices];
         renderFan();
-        // 恢复选中状态
-        savedSelection.forEach(idx => {
+        // 恢复已选标记
+        saved.forEach(idx => {
           const el = fanContainer.querySelector(`[data-index="${idx}"]`);
-          if (el) {
-            el.classList.add('selected');
-            // 需要等动画结束后设置 transform
-            setTimeout(() => {
-              el.style.transform = el.style.transform; // keep
-            }, 700);
-          }
+          if (el) el.classList.add('picked');
         });
       }
-    }, 300);
+    }, 500);
   });
 
 });

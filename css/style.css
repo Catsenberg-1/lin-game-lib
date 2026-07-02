@@ -237,11 +237,10 @@ body {
   width: 60px;
   height: 96px;
   cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
   border-radius: 6px;
-  perspective: 800px;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  z-index: 1;
 }
 
 .fan-card-inner {
@@ -254,6 +253,7 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .fan-card-inner::before {
@@ -274,50 +274,67 @@ body {
   justify-content: center;
   font-size: 1rem;
   color: rgba(201,165,75,0.4);
+  transition: all 0.2s ease;
 }
 
+/* hover 只动 inner，不动外层 transform */
 .fan-card:hover {
-  transform: translateY(-12px) scale(1.15) !important;
-  z-index: 999 !important;
-  box-shadow: 0 8px 25px rgba(201,165,75,0.4);
+  z-index: 999;
 }
-
 .fan-card:hover .fan-card-inner {
+  transform: scale(1.2);
   border-color: var(--gold-light);
-  box-shadow: 0 0 15px rgba(201,165,75,0.3);
+  box-shadow: 0 6px 20px rgba(201,165,75,0.4);
 }
 
 /* 已选中的扇面牌 */
-.fan-card.selected {
-  transform: translateY(-20px) scale(1.08) !important;
-  z-index: 998 !important;
+.fan-card.picked {
+  z-index: 998;
 }
-.fan-card.selected .fan-card-inner {
+.fan-card.picked .fan-card-inner {
   border-color: var(--gold-light);
-  border-width: 2px;
-  box-shadow: 0 0 20px rgba(201,165,75,0.6), 0 0 40px rgba(201,165,75,0.2);
-  background: linear-gradient(145deg, #4a3870 0%, #3a2858 50%, #4a3870 100%);
+  box-shadow: 0 0 18px rgba(201,165,75,0.6);
+  opacity: 0.6;
+  transform: scale(0.95);
 }
-.fan-card.selected .fan-card-inner::after {
-  content: '';
-  background: rgba(201,165,75,0.2);
-  inset: 0;
-  border-radius: 6px;
-  z-index: 2;
-}
-.fan-card.selected .fan-card-inner::before {
+.fan-card.picked .fan-card-inner::after {
   content: '✓';
+  color: var(--gold-light);
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* 飞行中的克隆卡牌 */
+.fly-card {
+  position: fixed;
+  width: 60px;
+  height: 96px;
+  border-radius: 6px;
+  z-index: 300;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, rgba(201,165,75,0.08) 0%, transparent 70%),
+    linear-gradient(145deg, #3a2a58 0%, #2a1a48 50%, #3a2a58 100%);
+  border: 1.5px solid var(--gold-light);
+  box-shadow: 0 8px 30px rgba(201,165,75,0.5);
+  transition: all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.fly-card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(201,165,75,0.3);
+  border-radius: 4px;
+}
+.fly-card::after {
+  content: '✦';
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--gold-light);
-  font-weight: bold;
-  font-size: 1.3rem;
-  border-color: var(--gold-light);
-  z-index: 3;
-}
-.fan-card.selected:hover {
-  transform: translateY(-22px) scale(1.15) !important;
+  font-size: 1rem;
+  color: rgba(201,165,75,0.6);
 }
 
 
@@ -328,20 +345,22 @@ body {
   display: flex;
   gap: 1.5rem;
   justify-content: center;
-  min-height: 60px;
+  min-height: 120px;
+  align-items: center;
   margin-top: 0.5rem;
 }
 
 .selected-slot {
-  width: 70px; height: 112px;
-  border: 2px dashed rgba(255,255,255,0.2);
+  width: 74px; height: 118px;
+  border: 2px dashed rgba(255,255,255,0.15);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-dim);
   font-size: 0.7rem;
-  transition: all 0.3s ease;
+  transition: all 0.35s ease;
+  position: relative;
 }
 
 .selected-slot.filled {
@@ -349,9 +368,26 @@ body {
   border-color: var(--gold-light);
   background: linear-gradient(145deg, #3a2a58 0%, #2a1a48 100%);
   box-shadow: 0 0 15px rgba(201,165,75,0.2);
-  color: var(--gold-light);
-  font-size: 0.75rem;
-  font-weight: bold;
+  animation: slotReceive 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slotReceive {
+  0% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.selected-slot.filled::after {
+  content: '✦';
+  font-size: 1.4rem;
+  color: rgba(201,165,75,0.6);
+}
+
+.selected-slot.filled::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(201,165,75,0.3);
+  border-radius: 5px;
 }
 
 /* ============================================================
