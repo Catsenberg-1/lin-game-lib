@@ -10,16 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: npm install
-
       - name: Deploy to Netlify
         run: |
-          npx netlify-cli deploy --dir=. --functions=netlify/functions --prod
+          zip -r deploy.zip . -x ".git/*" "node_modules/*" ".github/*" "netlify/functions/*" "package*.json"
+          curl -s -H "Authorization: Bearer ${{ secrets.NETLIFY_AUTH_TOKEN }}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            "https://api.netlify.com/api/v1/sites/d7a1fee7-59df-4e75-adc9-bfd6d54e8c29/deploys" | grep '"state"'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: d7a1fee7-59df-4e75-adc9-bfd6d54e8c29
