@@ -17,7 +17,7 @@
   --text: #e8e0f0;
   --text-dim: #9a8ab8;
   --accent: #7b5ea7;
-  --card-back: #3a2a58;
+  --card-back: #2a1a48;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   --radius: 16px;
 }
@@ -32,18 +32,18 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 2rem;
   overflow-x: hidden;
 }
 
-/* --- Container --- */
 .container {
   width: 100%;
-  max-width: 900px;
-  padding: 2rem;
+  max-width: 1200px;
+  padding: 1rem 2rem 3rem;
 }
 
-/* --- View Display --- */
+/* --- View --- */
 .view {
   display: none;
   animation: fadeIn 0.5s ease;
@@ -58,250 +58,380 @@ body {
 }
 
 /* ============================================================
-   主页视图
+   主页视图（保留原风格）
    ============================================================ */
-
-.home-content {
-  text-align: center;
-}
-
-.home-title {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.15em;
-}
-
-.home-subtitle {
-  color: var(--text-dim);
-  font-size: 1.1rem;
-  margin-bottom: 3rem;
-  letter-spacing: 0.3em;
-}
+.home-content { text-align: center; }
+.home-title { font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: 0.15em; }
+.home-subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 3rem; letter-spacing: 0.3em; }
 
 .module-cards {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;
 }
-
 .module-card {
   background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius);
   padding: 3rem 2.5rem;
   cursor: pointer;
   transition: all 0.35s ease;
-  min-width: 240px;
-  flex: 1;
-  max-width: 320px;
-  position: relative;
-  overflow: hidden;
+  min-width: 240px; flex: 1; max-width: 320px;
+  position: relative; overflow: hidden;
 }
-
 .module-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  z-index: 0;
+  content: ''; position: absolute; inset: 0; border-radius: var(--radius);
+  opacity: 0; transition: opacity 0.35s ease; z-index: 0;
 }
-
 .module-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
   border-color: var(--gold);
 }
+.module-card:hover::before { opacity: 1; }
+.module-card.tarot::before { background: radial-gradient(circle at center, rgba(123,94,167,0.2), transparent 70%); }
+.module-card.zhouyi::before { background: radial-gradient(circle at center, rgba(201,165,75,0.2), transparent 70%); }
 
-.module-card:hover::before {
-  opacity: 1;
-}
+.module-icon { font-size: 4rem; margin-bottom: 1rem; position: relative; z-index: 1; }
+.module-name { font-size: 1.6rem; font-weight: 600; letter-spacing: 0.1em; position: relative; z-index: 1; }
+.module-desc { color: var(--text-dim); margin-top: 0.5rem; font-size: 0.95rem; position: relative; z-index: 1; }
 
-.module-card.tarot::before {
-  background: radial-gradient(circle at center, rgba(123, 94, 167, 0.2), transparent 70%);
+/* ============================================================
+   公共导航
+   ============================================================ */
+.tarot-header {
+  display: flex; align-items: center; margin-bottom: 1.5rem; gap: 1rem;
 }
-.module-card.zhouyi::before {
-  background: radial-gradient(circle at center, rgba(201, 165, 75, 0.2), transparent 70%);
+.btn-back {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text); padding: 0.5rem 1rem; border-radius: 8px;
+  cursor: pointer; font-size: 0.95rem; transition: all 0.25s ease; font-family: inherit;
 }
+.btn-back:hover { background: rgba(255,255,255,0.12); border-color: var(--gold); }
+.tarot-title { font-size: 1.5rem; letter-spacing: 0.1em; }
 
-.module-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+/* ============================================================
+   牌阵选择
+   ============================================================ */
+.spread-cards {
+  display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;
+}
+.spread-card {
+  background: var(--bg-card);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 2rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  text-align: center;
+  flex: 1; min-width: 200px; max-width: 280px;
   position: relative;
-  z-index: 1;
 }
-
-.module-name {
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  position: relative;
-  z-index: 1;
+.spread-card:hover {
+  transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.5);
 }
-
-.module-desc {
-  color: var(--text-dim);
-  margin-top: 0.5rem;
-  font-size: 0.95rem;
-  position: relative;
-  z-index: 1;
+.spread-card.active {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 20px rgba(201,165,75,0.2);
+}
+.spread-card.active::after {
+  content: '✓'; position: absolute; top: 10px; right: 14px;
+  color: var(--gold-light); font-size: 1.2rem; font-weight: bold;
+}
+.spread-card.disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+.spread-card.disabled:hover { transform: none; box-shadow: none; }
+.spread-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+.spread-name { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+.spread-desc { color: var(--text-dim); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0.8rem; }
+.spread-badge {
+  font-size: 0.7rem; padding: 0.2rem 0.8rem; border-radius: 20px;
+  background: rgba(201,165,75,0.15); color: var(--gold-light);
+}
+.spread-badge.coming {
+  background: rgba(255,255,255,0.06); color: var(--text-dim);
 }
 
 /* ============================================================
-   塔罗视图
+   Loading 遮罩 — 扇面360°展开收起
    ============================================================ */
-
-.tarot-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
-}
-
-.btn-back {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: var(--text);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.25s ease;
-  font-family: inherit;
-}
-.btn-back:hover {
-  background: rgba(255,255,255,0.12);
-  border-color: var(--gold);
-}
-
-.tarot-title {
-  font-size: 1.5rem;
-  letter-spacing: 0.1em;
-}
-
-/* --- 洗牌动画 --- */
-.shuffle-overlay {
+.loading-overlay {
   display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(26, 16, 40, 0.9);
-  z-index: 100;
-  justify-content: center;
-  align-items: center;
+  position: fixed; inset: 0;
+  background: rgba(26,16,40,0.95);
+  z-index: 200;
+  justify-content: center; align-items: center;
   flex-direction: column;
+  overflow: hidden;
 }
-.shuffle-overlay.active {
-  display: flex;
-}
+.loading-overlay.active { display: flex; }
 
-.shuffle-text {
-  font-size: 1.5rem;
-  letter-spacing: 0.2em;
-  animation: shufflePulse 0.8s ease-in-out infinite;
+.loading-text {
+  font-size: 1.4rem; letter-spacing: 0.2em;
+  margin-bottom: 2rem;
+  animation: pulse 1s ease-in-out infinite;
+  z-index: 1;
 }
-
-@keyframes shufflePulse {
+@keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 
-.shuffle-stars {
-  font-size: 2rem;
-  margin-top: 1rem;
-  animation: spin 1.5s linear infinite;
+.loading-fan {
+  position: relative;
+  width: 300px; height: 300px;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+/* Loading 卡牌 */
+.loading-card {
+  position: absolute;
+  width: 20px; height: 32px;
+  background: linear-gradient(135deg, #3a2a58, #1a1030);
+  border: 1px solid rgba(201,165,75,0.5);
+  border-radius: 2px;
+  top: 50%; left: 50%;
+  transform-origin: center 200px;
+  animation: fanBurst 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-/* --- 卡牌区 --- */
-.cards-area {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
-}
-
-/* --- 单张卡牌 --- */
-.card-wrapper {
-  perspective: 1000px;
-  width: 200px;
-  height: 340px;
-  animation: cardEnter 0.6s ease both;
-}
-
-@keyframes cardEnter {
-  from {
+@keyframes fanBurst {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) translateY(0);
     opacity: 0;
-    transform: translateY(40px) scale(0.9);
   }
-  to {
+  15% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-200px);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg) translateY(0);
+    opacity: 0;
   }
 }
 
-.card-inner {
+/* ============================================================
+   扇面选牌区
+   ============================================================ */
+.fan-stage {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  margin: 0 auto;
+  overflow: visible;
+  padding: 0 20px;
+}
+
+.fan-container {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transform-style: preserve-3d;
-  cursor: pointer;
 }
 
-.card-wrapper.flipped .card-inner {
-  transform: rotateY(180deg);
-}
-
-.card-face {
+/* 扇面中每张卡牌 */
+.fan-card {
   position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  backface-visibility: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1.2rem;
-  text-align: center;
-  box-shadow: var(--shadow);
+  left: 0;
+  top: 0;
+  width: 60px;
+  height: 96px;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+  border-radius: 6px;
+  perspective: 800px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* --- 卡牌背面 --- */
-.card-back {
-  background: linear-gradient(135deg, #3a2a58 0%, #2a1a48 50%, #3a2a58 100%);
-  border: 2px solid var(--gold);
+.fan-card-inner {
+  width: 100%; height: 100%;
+  border-radius: 6px;
+  background:
+    radial-gradient(ellipse at center, rgba(201,165,75,0.08) 0%, transparent 70%),
+    linear-gradient(145deg, #3a2a58 0%, #2a1a48 50%, #3a2a58 100%);
+  border: 1.5px solid rgba(201,165,75,0.45);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
-.card-back::before {
+.fan-card-inner::before {
   content: '';
   position: absolute;
-  inset: 10px;
-  border: 1px solid rgba(201, 165, 75, 0.4);
-  border-radius: 10px;
+  inset: 4px;
+  border: 1px solid rgba(201,165,75,0.2);
+  border-radius: 4px;
+  z-index: 1;
 }
 
-.card-back-pattern {
-  font-size: 3.5rem;
-  opacity: 0.7;
+.fan-card-inner::after {
+  content: '✦';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: rgba(201,165,75,0.4);
 }
 
-.card-back-text {
-  color: var(--gold);
-  font-size: 0.85rem;
-  letter-spacing: 0.2em;
+.fan-card:hover {
+  transform: translateY(-12px) scale(1.15) !important;
+  z-index: 999 !important;
+  box-shadow: 0 8px 25px rgba(201,165,75,0.4);
+}
+
+.fan-card:hover .fan-card-inner {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 15px rgba(201,165,75,0.3);
+}
+
+/* 已选中的扇面牌 */
+.fan-card.selected {
+  transform: translateY(-20px) scale(1.08) !important;
+  z-index: 998 !important;
+}
+.fan-card.selected .fan-card-inner {
+  border-color: var(--gold-light);
+  border-width: 2px;
+  box-shadow: 0 0 20px rgba(201,165,75,0.6), 0 0 40px rgba(201,165,75,0.2);
+  background: linear-gradient(145deg, #4a3870 0%, #3a2858 50%, #4a3870 100%);
+}
+.fan-card.selected .fan-card-inner::after {
+  content: '';
+  background: rgba(201,165,75,0.2);
+  inset: 0;
+  border-radius: 6px;
+  z-index: 2;
+}
+.fan-card.selected .fan-card-inner::before {
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-light);
+  font-weight: bold;
+  font-size: 1.3rem;
+  border-color: var(--gold-light);
+  z-index: 3;
+}
+.fan-card.selected:hover {
+  transform: translateY(-22px) scale(1.15) !important;
+}
+
+
+/* ============================================================
+   已选中的牌（选牌区下方）
+   ============================================================ */
+.selected-cards {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  min-height: 60px;
   margin-top: 0.5rem;
 }
 
-/* --- 卡牌正面 --- */
+.selected-slot {
+  width: 70px; height: 112px;
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  transition: all 0.3s ease;
+}
+
+.selected-slot.filled {
+  border-style: solid;
+  border-color: var(--gold-light);
+  background: linear-gradient(145deg, #3a2a58 0%, #2a1a48 100%);
+  box-shadow: 0 0 15px rgba(201,165,75,0.2);
+  color: var(--gold-light);
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* ============================================================
+   按钮
+   ============================================================ */
+.actions { text-align: center; }
+
+.btn-primary {
+  background: linear-gradient(135deg, #7b5ea7, #5a3a87);
+  color: #fff; border: none;
+  padding: 0.8rem 2rem; border-radius: 30px;
+  font-size: 1rem; cursor: pointer;
+  transition: all 0.3s ease; font-family: inherit;
+  letter-spacing: 0.1em;
+  box-shadow: 0 4px 15px rgba(123,94,167,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(123,94,167,0.5);
+  background: linear-gradient(135deg, #8b6eb7, #6a4a97);
+}
+.btn-primary:disabled {
+  opacity: 0.4; cursor: not-allowed; transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 0.6rem 1.5rem; border-radius: 30px;
+  font-size: 0.9rem; cursor: pointer;
+  transition: all 0.3s ease; font-family: inherit;
+  margin-left: 1rem;
+}
+.btn-secondary:hover {
+  border-color: var(--gold); color: var(--gold-light);
+}
+
+/* ============================================================
+   结果视图 — 卡牌展示
+   ============================================================ */
+.cards-area {
+  display: flex; gap: 1.5rem; justify-content: center;
+  flex-wrap: wrap; margin-bottom: 2rem;
+}
+
+.card-wrapper {
+  perspective: 1000px;
+  width: 200px; height: 340px;
+}
+
+.card-inner {
+  position: relative; width: 100%; height: 100%;
+  transition: transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+  transform-style: preserve-3d; cursor: pointer;
+}
+.card-wrapper.flipped .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute; inset: 0; border-radius: 14px;
+  backface-visibility: hidden;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  padding: 1.2rem; text-align: center;
+  box-shadow: var(--shadow);
+}
+
+/* 结果牌背面 */
+.card-back {
+  background: linear-gradient(135deg, #3a2a58 0%, #2a1a48 50%, #3a2a58 100%);
+  border: 2px solid var(--gold);
+}
+.card-back::before {
+  content: ''; position: absolute;
+  inset: 10px; border: 1px solid rgba(201,165,75,0.4); border-radius: 10px;
+}
+.card-back-pattern { font-size: 3.5rem; opacity: 0.7; }
+.card-back-text { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.2em; margin-top: 0.5rem; }
+
+/* 结果牌正面 */
 .card-front {
   background: linear-gradient(160deg, #2a1a48 0%, #1a1030 100%);
   border: 2px solid var(--gold-light);
@@ -309,151 +439,64 @@ body {
   overflow-y: auto;
   justify-content: flex-start;
 }
-
-.card-front.major {
-  border-color: var(--gold-light);
-}
-.card-front.minor {
-  border-color: var(--accent);
-}
+.card-front.major { border-color: var(--gold-light); }
+.card-front.minor { border-color: var(--accent); }
 
 .card-type-badge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.5rem;
+  font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px;
+  letter-spacing: 0.1em; margin-bottom: 0.5rem;
 }
+.badge-major { background: rgba(201,165,75,0.2); color: var(--gold-light); }
+.badge-minor { background: rgba(123,94,167,0.2); color: #b89dd8; }
 
-.badge-major {
-  background: rgba(201, 165, 75, 0.2);
-  color: var(--gold-light);
-}
-.badge-minor {
-  background: rgba(123, 94, 167, 0.2);
-  color: #b89dd8;
-}
+.card-name-zh { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.2rem; letter-spacing: 0.05em; }
+.card-name-en { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.6rem; font-style: italic; }
+.card-keywords { font-size: 0.75rem; color: var(--gold-light); margin-bottom: 0.6rem; line-height: 1.5; }
+.card-meaning { font-size: 0.72rem; color: var(--text-dim); line-height: 1.6; text-align: left; flex: 1; }
+.card-hint { font-size: 0.7rem; color: rgba(255,255,255,0.35); margin-top: 0.5rem; }
 
-.card-name-zh {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 0.2rem;
-  letter-spacing: 0.05em;
+/* 结果牌入场 */
+.result-area .card-wrapper {
+  animation: resultCardIn 0.5s ease both;
 }
+.result-area .card-wrapper:nth-child(1) { animation-delay: 0s; }
+.result-area .card-wrapper:nth-child(2) { animation-delay: 0.15s; }
+.result-area .card-wrapper:nth-child(3) { animation-delay: 0.3s; }
 
-.card-name-en {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  margin-bottom: 0.6rem;
-  font-style: italic;
-}
-
-.card-keywords {
-  font-size: 0.75rem;
-  color: var(--gold-light);
-  margin-bottom: 0.6rem;
-  line-height: 1.5;
-}
-
-.card-meaning {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  line-height: 1.6;
-  text-align: left;
-  flex: 1;
-}
-
-.card-hint {
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.35);
-  margin-top: 0.5rem;
-}
-
-/* --- 按钮区 --- */
-.actions {
-  text-align: center;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #7b5ea7, #5a3a87);
-  color: #fff;
-  border: none;
-  padding: 0.8rem 2rem;
-  border-radius: 30px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  letter-spacing: 0.1em;
-  box-shadow: 0 4px 15px rgba(123, 94, 167, 0.3);
-}
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(123, 94, 167, 0.5);
-  background: linear-gradient(135deg, #8b6eb7, #6a4a97);
+@keyframes resultCardIn {
+  from { opacity: 0; transform: translateY(40px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ============================================================
-   周易占位视图
+   周易占位
    ============================================================ */
-
-.placeholder-content {
-  text-align: center;
-  padding: 4rem 2rem;
-}
-
-.placeholder-icon {
-  font-size: 5rem;
-  margin-bottom: 1.5rem;
-}
-
-.placeholder-title {
-  font-size: 1.8rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 1rem;
-}
-
-.placeholder-text {
-  color: var(--text-dim);
-  font-size: 1rem;
-  line-height: 1.8;
-}
+.placeholder-content { text-align: center; padding: 4rem 2rem; }
+.placeholder-icon { font-size: 5rem; margin-bottom: 1.5rem; }
+.placeholder-title { font-size: 1.8rem; letter-spacing: 0.1em; margin-bottom: 1rem; }
+.placeholder-text { color: var(--text-dim); font-size: 1rem; line-height: 1.8; }
 
 /* ============================================================
    响应式
    ============================================================ */
+@media (max-width: 900px) {
+  .fan-stage { height: 400px; }
+  .fan-card { width: 48px; height: 77px; }
 
-@media (max-width: 720px) {
-  .module-cards {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .cards-area {
-    gap: 1rem;
-  }
-
-  .card-wrapper {
-    width: 150px;
-    height: 260px;
-  }
-
-  .card-name-zh {
-    font-size: 1rem;
-  }
-  .card-meaning {
-    font-size: 0.65rem;
-  }
+  body { padding-top: 1rem; }
+  .container { padding: 0.5rem 1rem 2rem; }
+  .spread-cards { flex-direction: column; align-items: center; }
+  .spread-card { max-width: 100%; }
+  .selected-cards { gap: 1rem; }
 }
 
-@media (max-width: 540px) {
-  .cards-area {
-    flex-direction: column;
-    align-items: center;
-  }
+@media (max-width: 600px) {
+  .fan-stage { height: 340px; }
+  .fan-card { width: 38px; height: 61px; }
+  .fan-card-inner::after { font-size: 0.7rem; }
 
-  .card-wrapper {
-    width: 180px;
-    height: 310px;
-  }
+  .home-title { font-size: 2rem; }
+  .card-wrapper { width: 160px; height: 272px; }
+  .cards-area { gap: 0.8rem; }
+  .module-cards { flex-direction: column; align-items: center; }
 }

@@ -17,14 +17,12 @@
         <p class="home-subtitle">探索命运的指引</p>
 
         <div class="module-cards">
-          <!-- 塔罗牌 -->
           <div class="module-card tarot" id="btn-tarot">
             <div class="module-icon">🔮</div>
             <div class="module-name">塔 罗 牌</div>
             <div class="module-desc">抽取三张牌，解读命运的讯息</div>
           </div>
 
-          <!-- 周易 -->
           <div class="module-card zhouyi" id="btn-zhouyi">
             <div class="module-icon">☯</div>
             <div class="module-name">周 易</div>
@@ -34,19 +32,77 @@
       </div>
     </div>
 
-    <!-- ==================== 塔罗视图 ==================== -->
-    <div id="view-tarot" class="view">
+    <!-- ==================== 牌阵选择视图 ==================== -->
+    <div id="view-spread-select" class="view">
       <div class="tarot-header">
-        <button class="btn-back" id="btn-back-home">← 返回</button>
-        <h2 class="tarot-title">🔮 塔罗占卜</h2>
+        <button class="btn-back" id="btn-back-from-spread">← 返回</button>
+        <h2 class="tarot-title">🔮 选择牌阵</h2>
       </div>
 
-      <div class="cards-area" id="cards-container">
-        <!-- JS 动态渲染卡牌 -->
+      <div class="spread-cards">
+        <div class="spread-card active" data-spread="no-spread">
+          <div class="spread-icon">🃏🃏🃏</div>
+          <div class="spread-name">无牌阵</div>
+          <div class="spread-desc">自由抽取三张牌，适合日常占卜</div>
+          <span class="spread-badge">当前可用</span>
+        </div>
+
+        <div class="spread-card disabled" data-spread="two-choices">
+          <div class="spread-icon">🃏⚖️🃏</div>
+          <div class="spread-name">二择一牌阵</div>
+          <div class="spread-desc">面对两个选择时，帮你做出明智决策</div>
+          <span class="spread-badge coming">即将推出</span>
+        </div>
+
+        <div class="spread-card disabled" data-spread="lovers-pyramid">
+          <div class="spread-icon">💕🏛️💕</div>
+          <div class="spread-name">恋人金字塔</div>
+          <div class="spread-desc">探索感情关系的发展与走向</div>
+          <span class="spread-badge coming">即将推出</span>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:2rem;">
+        <button class="btn-primary" id="btn-start-draw">✨ 开始抽牌</button>
+      </div>
+    </div>
+
+    <!-- ==================== 塔罗抽牌视图（扇面选牌） ==================== -->
+    <div id="view-tarot-draw" class="view">
+      <div class="tarot-header">
+        <button class="btn-back" id="btn-back-to-spread">← 牌阵选择</button>
+        <h2 class="tarot-title" id="draw-title">🃏 请从扇面中选取 3 张牌</h2>
+      </div>
+
+      <!-- 扇面选牌区 -->
+      <div class="fan-stage" id="fan-stage">
+        <div class="fan-container" id="fan-container">
+          <!-- JS 动态生成 78 张牌 -->
+        </div>
+      </div>
+
+      <!-- 已选中的牌 -->
+      <div class="selected-cards" id="selected-cards"></div>
+
+      <div class="actions" style="margin-top:1rem;">
+        <button class="btn-primary" id="btn-confirm-pick" disabled>确认选择 (0/3)</button>
+        <button class="btn-secondary" id="btn-clear-pick" style="display:none;">清除重选</button>
+      </div>
+    </div>
+
+    <!-- ==================== 塔罗结果视图 ==================== -->
+    <div id="view-tarot-result" class="view">
+      <div class="tarot-header">
+        <button class="btn-back" id="btn-result-back">← 重新选择</button>
+        <h2 class="tarot-title">🔮 占卜结果</h2>
+      </div>
+
+      <div class="cards-area result-area" id="result-cards">
+        <!-- JS 动态渲染 -->
       </div>
 
       <div class="actions">
-        <button class="btn-primary" id="btn-redraw">🔄 重新抽牌</button>
+        <button class="btn-primary" id="btn-redraw">🔄 重新洗牌</button>
       </div>
     </div>
 
@@ -56,21 +112,19 @@
         <button class="btn-back" id="btn-back-zhouyi">← 返回</button>
         <h2 class="tarot-title">☯ 周易</h2>
       </div>
-
       <div class="placeholder-content">
         <div class="placeholder-icon">🏗️</div>
         <div class="placeholder-title">周易模块开发中</div>
-        <div class="placeholder-text">
-          六十四卦 · 六爻起卦 · 卦象解读<br>
-          敬请期待……
-        </div>
+        <div class="placeholder-text">六十四卦 · 六爻起卦 · 卦象解读<br>敬请期待……</div>
       </div>
     </div>
 
-    <!-- ==================== 洗牌动画遮罩 ==================== -->
-    <div id="shuffle-overlay" class="shuffle-overlay">
-      <div class="shuffle-text">洗牌中...</div>
-      <div class="shuffle-stars">🔮</div>
+    <!-- ==================== Loading 遮罩（扇面360°展开收起） ==================== -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-text">✨ 洗牌中...</div>
+      <div class="loading-fan" id="loading-fan">
+        <!-- JS 动态生成 loading 牌 -->
+      </div>
     </div>
 
   </div>
