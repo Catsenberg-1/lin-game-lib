@@ -41,15 +41,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================
-  // 主页 → 牌阵选择
+  // 主页热区 — SVG 多边形（从 localStorage 读取）
   // ========================
-  document.getElementById('btn-tarot').addEventListener('click', () => {
-    showView('spreadSelect');
-  });
+  function applyHotZones() {
+    const hzTarot = document.getElementById('hz-tarot');
+    const hzZhouyi = document.getElementById('hz-zhouyi');
+    if (!hzTarot || !hzZhouyi) return;
 
-  document.getElementById('btn-zhouyi').addEventListener('click', () => {
-    showView('zhouyi');
-  });
+    const defaults = [
+      { points: [{x:5,y:48},{x:48,y:48},{x:48,y:66},{x:5,y:66},{x:5,y:48}] },
+      { points: [{x:50,y:10},{x:80,y:10},{x:80,y:30},{x:50,y:30},{x:50,y:10}] },
+    ];
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('divination_hotzones_v2') || '[]');
+      const polys = [hzTarot, hzZhouyi];
+      polys.forEach((el, i) => {
+        const poly = (saved[i] && saved[i].points) ? saved[i] : defaults[i];
+        el.setAttribute('points', poly.points.map(p => `${p.x},${p.y}`).join(' '));
+      });
+    } catch(e) {}
+
+    // 点击导航
+    hzTarot.addEventListener('click', () => showView('spreadSelect'));
+    hzZhouyi.addEventListener('click', () => showView('zhouyi'));
+  }
+
+  applyHotZones();
 
   // 牌阵选择 → 返回主页
   document.getElementById('btn-back-from-spread').addEventListener('click', () => {
@@ -339,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========================
   function showResults() {
     drawnCards = selectedIndices.map(i => fanDeck[i]);
+    incrementCount(); // 累计占卜次数 +1
     showView('tarotResult');
     renderResults();
   }
@@ -381,6 +400,77 @@ document.addEventListener('DOMContentLoaded', () => {
       resultCardsEl.appendChild(wrapper);
     });
   }
+
+  // ========================
+  // 神秘学累计计数（全用户实时同步）
+  // ========================
+  const COUNTER_API = '/.netlify/functions/counter';
+  const STORAGE_KEY = 'divination_local_fallback';
+
+  // 从后端获取全用户累计计数
+  async function fetchTotalCount() {
+    try {
+      const res = await fetch(COUNTER_API);
+      const data = await res.json();
+      if (data.count !== undefined) return data.count;
+    } catch (e) {
+      // 本地开发或无网络时，回退 localStorage
+    }
+    const local = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+    return local;
+  }
+
+  // 递增全用户累计计数
+  async function incrementCount() {
+    try {
+      const res = await fetch(COUNTER_API, { method: 'POST' });
+      const data = await res.json();
+      if (data.count !== undefined) {
+        updateMysticDisplay(data.count);
+        return;
+      }
+    } catch (e) {
+      // 回退 localStorage
+    }
+    const local = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) + 1;
+    localStorage.setItem(STORAGE_KEY, local.toString());
+    updateMysticDisplay(local);
+  }
+
+  async function updateMysticDisplay(knownCount) {
+    const countEl = document.getElementById('mystic-count');
+    const shrinkEl = document.getElementById('mystic-shrink');
+    if (!countEl || !shrinkEl) return;
+
+    let total;
+    if (knownCount !== undefined) {
+      total = knownCount;
+    } else {
+      total = await fetchTotalCount();
+    }
+
+    countEl.textContent = total.toLocaleString();
+
+    // 后半句逐字缩小
+    const text = '据说占卜总数越多，牌灵的力量更强哦';
+    shrinkEl.innerHTML = '';
+    const chars = [...text];
+    const startSize = 1.15;
+    const endSize = 0.45;
+
+    chars.forEach((char, i) => {
+      const span = document.createElement('span');
+      span.className = 'mystic-char';
+      const ratio = i / (chars.length - 1);
+      const size = startSize + (endSize - startSize) * ratio;
+      span.style.fontSize = size + 'rem';
+      span.textContent = char;
+      shrinkEl.appendChild(span);
+    });
+  }
+
+  // 页面加载时获取计数
+  updateMysticDisplay();
 
   // ========================
   // 窗口大小变化时重渲染扇面

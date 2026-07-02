@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>热区编辑器 - 自由绘制</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #111; color: #eee; font-family: sans-serif; overflow-x: hidden; }
+
+    .toolbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: #1a1a1a; display: flex; gap: 8px; padding: 8px 12px;
+      align-items: center; flex-wrap: wrap; border-bottom: 1px solid #333;
+    }
+    .toolbar button {
+      padding: 7px 14px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 13px; font-weight: bold;
+    }
+    .btn-draw { background: #e67e22; color: #fff; }
+    .btn-draw.active { background: #f39c12; box-shadow: 0 0 10px #f39c12; }
+    .btn-finish { background: #27ae60; color: #fff; }
+    .btn-del { background: #c0392b; color: #fff; }
+    .btn-save { background: #2980b9; color: #fff; }
+    .btn-clear { background: #555; color: #fff; }
+    .sep { width: 1px; height: 24px; background: #444; margin: 0 4px; }
+    .toolbar span { font-size: 12px; color: #aaa; }
+    .toolbar .hint { color: #f90; }
+
+    .scene-wrapper {
+      margin: 55px auto 0;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .scene-img {
+      display: block; width: 100%;
+      image-rendering: pixelated;
+    }
+
+    svg {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* 已完成的 polygon */
+    .zone-polygon {
+      fill: rgba(255,200,60,0.12);
+      stroke: rgba(255,200,60,0.7);
+      stroke-width: 0.6;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: fill 0.2s;
+    }
+    .zone-polygon:hover {
+      fill: rgba(255,200,60,0.3);
+      stroke: rgba(255,200,60,1);
+    }
+    .zone-polygon.selected {
+      fill: rgba(68,170,255,0.2);
+      stroke: #4af;
+      stroke-width: 1;
+    }
+
+    /* 正在绘制中的线 */
+    .drawing-line {
+      fill: none;
+      stroke: #0ff;
+      stroke-width: 0.5;
+      stroke-dasharray: 3 2;
+    }
+
+    /* 控制点 */
+    .ctrl-point {
+      fill: #fff;
+      stroke: #4af;
+      stroke-width: 1.5;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .ctrl-point:hover { fill: #4af; r: 2.5; }
+
+    /* 当前绘制点 */
+    .draw-point {
+      fill: #0ff;
+      stroke: #fff;
+      stroke-width: 1;
+      pointer-events: none;
+    }
+
+    .info-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a1a1a; padding: 6px 14px; font-size: 11px;
+      border-top: 1px solid #333; display: flex; gap: 16px;
+      flex-wrap: wrap; z-index: 100; align-items: center;
+    }
+    .info-bar .key { color: #0ff; }
+    .info-bar .val { color: #ffd860; }
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="btn-draw" id="btn-draw" onclick="toggleDraw()">✏️ 开始绘制</button>
+  <button class="btn-finish" onclick="finishPolygon()">✅ 完成闭合</button>
+  <span class="sep"></span>
+  <button class="btn-del" onclick="deleteSelected()">🗑 删除选中</button>
+  <button class="btn-save" onclick="saveAll()">💾 保存</button>
+  <button class="btn-clear" onclick="clearAll()">↺ 重置</button>
+  <span class="sep"></span>
+  <span class="hint" id="status-msg">点击 ✏️ 开始绘制热区</span>
+</div>
+
+<div class="scene-wrapper" id="scene-wrapper">
+  <img class="scene-img" src="assets/bg-cabin.jpg" id="scene-img" draggable="false">
+  <svg id="svg-layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+</div>
+
+<div class="info-bar">
+  <span>🖱 <span class="key">单击</span>添加顶点</span>
+  <span>✅ <span class="key">点「完成闭合」</span>生成热区</span>
+  <span>📍 <span class="key">拖拽顶点</span>微调形状</span>
+  <span>🗑 <span class="key">选中后</span>点删除</span>
+  <span>💾 保存到本地，主页自动同步</span>
+  <span id="coord-msg" style="margin-left:auto;"></span>
+</div>
+
+<script>
+  const wrapper = document.getElementById('scene-wrapper');
+  const img = document.getElementById('scene-img');
+  const svg = document.getElementById('svg-layer');
+  const statusMsg = document.getElementById('status-msg');
+  const coordMsg = document.getElementById('coord-msg');
+  const btnDraw = document.getElementById('btn-draw');
+
+  let isDrawing = false;
+  let currentPoints = [];    // 正在绘制中的点 [{x,y}]  百分比坐标
+  let polygons = [];        // 已完成的多边形 [{name, points:[{x,y},...], svgEl}]
+  let selectedPoly = null;
+  let draggingPoint = null; // {poly, pointIdx}
+  let dragOffset = null;
+
+  // ── 坐标转换 ──
+  function getPct(e) {
+    const rect = img.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+  }
+
+  // ── 绘制模式 ──
+  function toggleDraw() {
+    if (isDrawing) {
+      // 取消绘制
+      isDrawing = false;
+      currentPoints = [];
+      btnDraw.classList.remove('active');
+      btnDraw.textContent = '✏️ 开始绘制';
+      statusMsg.textContent = '已取消绘制';
+      renderSVG();
+    } else {
+      isDrawing = true;
+      currentPoints = [];
+      btnDraw.classList.add('active');
+      btnDraw.textContent = '✏️ 绘制中…(点完成闭合)';
+      statusMsg.textContent = '🖱 在图片上单击添加顶点';
+      deselectAll();
+    }
+  }
+
+  function finishPolygon() {
+    if (currentPoints.length < 3) {
+      alert('至少需要3个点才能形成热区！');
+      return;
+    }
+    // 闭合多边形
+    const points = [...currentPoints, { ...currentPoints[0] }];
+    const name = polygons.length === 0 ? '塔罗占卜' : (polygons.length === 1 ? '周易占卜' : `热区${polygons.length + 1}`);
+    polygons.push({ name, points });
+
+    isDrawing = false;
+    currentPoints = [];
+    btnDraw.classList.remove('active');
+    btnDraw.textContent = '✏️ 开始绘制';
+    statusMsg.textContent = `✓ 已创建「${name}」，继续绘制或点保存`;
+    renderSVG();
+  }
+
+  function deleteSelected() {
+    if (!selectedPoly) return;
+    polygons = polygons.filter(p => p !== selectedPoly);
+    selectedPoly = null;
+    statusMsg.textContent = '已删除选中热区';
+    renderSVG();
+  }
+
+  function deselectAll() {
+    selectedPoly = null;
+    draggingPoint = null;
+  }
+
+  // ── 渲染 SVG ──
+  function renderSVG() {
+    svg.innerHTML = '';
+
+    // 已完成的 polygon
+    polygons.forEach((poly, idx) => {
+      const pointsStr = poly.points.map(p => `${p.x},${p.y}`).join(' ');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      path.setAttribute('points', pointsStr);
+      path.setAttribute('class', 'zone-polygon' + (poly === selectedPoly ? ' selected' : ''));
+      path.setAttribute('data-idx', idx);
+      path.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isDrawing) return;
+        selectPolygon(poly);
+      });
+
+      // 控制点
+      const ctrlPoints = poly.points.slice(0, -1); // 最后一个点是闭合点
+      ctrlPoints.forEach((pt, pi) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pt.x);
+        circle.setAttribute('cy', pt.y);
+        circle.setAttribute('r', poly === selectedPoly ? '1.8' : '1.2');
+        circle.setAttribute('class', 'ctrl-point');
+        circle.setAttribute('data-poly-idx', idx);
+        circle.setAttribute('data-pt-idx', pi);
+        circle.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          startDragPoint(e, poly, pi);
+        });
+        circle.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          startDragPoint(e.touches[0], poly, pi);
+        });
+        svg.appendChild(circle);
+      });
+
+      // 名称标签
+      const center = getCentroid(poly.points);
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', center.x);
+      text.setAttribute('y', center.y);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.setAttribute('fill', '#ffd860');
+      text.setAttribute('font-size', '2.5');
+      text.setAttribute('font-family', 'sans-serif');
+      text.setAttribute('font-weight', 'bold');
+      text.setAttribute('pointer-events', 'none');
+      text.style.textShadow = '0 0 4px #000';
+      text.textContent = poly.name;
+      svg.appendChild(text);
+
+      svg.appendChild(path);
+    });
+
+    // 正在绘制中的线
+    if (currentPoints.length >= 2) {
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      const pts = currentPoints.map(p => `${p.x},${p.y}`).join(' ');
+      poly.setAttribute('points', pts);
+      poly.setAttribute('class', 'drawing-line');
+      svg.appendChild(poly);
+    }
+
+    // 当前点标记
+    currentPoints.forEach(pt => {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', pt.x);
+      circle.setAttribute('cy', pt.y);
+      circle.setAttribute('r', '1');
+      circle.setAttribute('class', 'draw-point');
+      svg.appendChild(circle);
+    });
+  }
+
+  function getCentroid(points) {
+    let cx = 0, cy = 0;
+    const n = points.length - 1; // exclude closing point
+    for (let i = 0; i < n; i++) { cx += points[i].x; cy += points[i].y; }
+    return { x: cx / n, y: cy / n };
+  }
+
+  function selectPolygon(poly) {
+    selectedPoly = poly;
+    coordMsg.textContent = `选中: ${poly.name} | ${poly.points.length - 1} 个顶点`;
+    renderSVG();
+  }
+
+  function startDragPoint(e, poly, ptIdx) {
+    selectPolygon(poly);
+    draggingPoint = { poly, ptIdx };
+  }
+
+  // ── 鼠标事件（绑定在 wrapper 上）──
+  wrapper.addEventListener('click', (e) => {
+    // 如果点在 polygon 或 ctrl-point 上，不处理
+    if (e.target.closest('.zone-polygon') || e.target.closest('.ctrl-point')) return;
+
+    if (!isDrawing) {
+      deselectAll();
+      renderSVG();
+      coordMsg.textContent = '';
+      return;
+    }
+    const p = getPct(e);
+    currentPoints.push(p);
+    statusMsg.textContent = `已添加 ${currentPoints.length} 个点`;
+    renderSVG();
+  });
+
+  wrapper.addEventListener('mousemove', (e) => {
+    if (draggingPoint) {
+      const p = getPct(e);
+      draggingPoint.poly.points[draggingPoint.ptIdx] = p;
+      if (draggingPoint.ptIdx === 0) {
+        draggingPoint.poly.points[draggingPoint.poly.points.length - 1] = { ...p };
+      }
+      renderSVG();
+    }
+  });
+
+  wrapper.addEventListener('mouseup', () => { draggingPoint = null; });
+  wrapper.addEventListener('mouseleave', () => { draggingPoint = null; });
+
+  // ── 触摸事件 ──
+  wrapper.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.zone-polygon') || e.target.closest('.ctrl-point')) return;
+    if (!isDrawing) return;
+    e.preventDefault();
+    const p = getPct(e.touches[0]);
+    currentPoints.push(p);
+    statusMsg.textContent = `已添加 ${currentPoints.length} 个点`;
+    renderSVG();
+  }, {passive: false});
+
+  wrapper.addEventListener('touchmove', (e) => {
+    if (draggingPoint) {
+      e.preventDefault();
+      const p = getPct(e.touches[0]);
+      draggingPoint.poly.points[draggingPoint.ptIdx] = p;
+      if (draggingPoint.ptIdx === 0) {
+        draggingPoint.poly.points[draggingPoint.poly.points.length - 1] = { ...p };
+      }
+      renderSVG();
+    }
+  });
+
+  wrapper.addEventListener('touchend', () => { draggingPoint = null; });
+
+  // ── 键盘 ──
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && isDrawing) {
+      finishPolygon();
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (isDrawing && currentPoints.length > 0) {
+        currentPoints.pop();
+        statusMsg.textContent = `撤销，剩余 ${currentPoints.length} 个点`;
+        renderSVG();
+      } else if (selectedPoly) {
+        deleteSelected();
+      }
+    }
+    if (e.key === 'Escape') {
+      if (isDrawing) toggleDraw();
+      else { deselectAll(); renderSVG(); coordMsg.textContent = ''; }
+    }
+  });
+
+  // ── 保存 / 重置 ──
+  function saveAll() {
+    const data = polygons.map(p => ({
+      name: p.name,
+      points: p.points.map(pt => ({ x: parseFloat(pt.x.toFixed(2)), y: parseFloat(pt.y.toFixed(2)) }))
+    }));
+    localStorage.setItem('divination_hotzones_v2', JSON.stringify(data));
+
+    // 生成 clip-path CSS
+    let css = '';
+    data.forEach((poly, i) => {
+      const cls = i === 0 ? 'hotzone-tarot' : (i === 1 ? 'hotzone-zhouyi' : `hotzone-${i}`);
+      const ptsStr = poly.points.map(p => `${p.x.toFixed(1)}% ${p.y.toFixed(1)}%`).join(', ');
+      css += `.${cls} {\n  clip-path: polygon(${ptsStr});\n}\n`;
+    });
+
+    navigator.clipboard.writeText(css).then(() => {
+      statusMsg.textContent = '💾 已保存！CSS clip-path 已复制到剪贴板';
+    }).catch(() => {
+      statusMsg.textContent = '💾 已保存！手动查看 console';
+      console.log(css);
+    });
+
+    renderSVG();
+  }
+
+  function clearAll() {
+    if (confirm('确定清空所有热区？')) {
+      polygons = [];
+      selectedPoly = null;
+      currentPoints = [];
+      isDrawing = false;
+      btnDraw.classList.remove('active');
+      btnDraw.textContent = '✏️ 开始绘制';
+      localStorage.removeItem('divination_hotzones_v2');
+      renderSVG();
+      statusMsg.textContent = '已清空';
+    }
+  }
+
+  // ── 加载已保存 ──
+  function loadSaved() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('divination_hotzones_v2') || '[]');
+      if (saved.length > 0) {
+        polygons = saved.map(s => ({
+          name: s.name,
+          points: s.points.map(p => ({ x: p.x, y: p.y }))
+        }));
+        renderSVG();
+        statusMsg.textContent = `已加载 ${polygons.length} 个热区`;
+      }
+    } catch(e) {}
+  }
+
+  // ── 初始化 ──
+  loadSaved();
+</script>
+</body>
+</html>

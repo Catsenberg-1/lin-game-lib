@@ -10,25 +10,13 @@
 
   <div class="container">
 
-    <!-- ==================== 主页视图 ==================== -->
-    <div id="view-home" class="view active">
-      <div class="home-content">
-        <h1 class="home-title">✨ 占 卜 ✨</h1>
-        <p class="home-subtitle">探索命运的指引</p>
-
-        <div class="module-cards">
-          <div class="module-card tarot" id="btn-tarot">
-            <div class="module-icon">🔮</div>
-            <div class="module-name">塔 罗 牌</div>
-            <div class="module-desc">抽取三张牌，解读命运的讯息</div>
-          </div>
-
-          <div class="module-card zhouyi" id="btn-zhouyi">
-            <div class="module-icon">☯</div>
-            <div class="module-name">周 易</div>
-            <div class="module-desc">六十四卦，洞悉天地玄机</div>
-          </div>
-        </div>
+    <!-- ==================== 主页视图：女巫小屋背景图 ==================== -->
+    <div id="view-home" class="view active" style="padding:0;margin:0;">
+      <div class="bg-scene" id="bg-scene">
+        <svg class="hotzone-svg" id="hotzone-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <polygon class="hz-poly" id="hz-tarot" />
+          <polygon class="hz-poly" id="hz-zhouyi" />
+        </svg>
       </div>
     </div>
 
@@ -72,6 +60,14 @@
       <div class="tarot-header">
         <button class="btn-back" id="btn-back-to-spread">← 牌阵选择</button>
         <h2 class="tarot-title" id="draw-title">🃏 请从扇面中选取 3 张牌</h2>
+      </div>
+
+      <!-- 累计占卜计数 -->
+      <div class="mystic-counter" id="mystic-counter">
+        <span class="mystic-normal">已经累计有 </span>
+        <span class="mystic-number" id="mystic-count">0</span>
+        <span class="mystic-normal"> 人占卜过，</span>
+        <span class="mystic-shrink" id="mystic-shrink"></span>
       </div>
 
       <!-- 扇面选牌区 -->

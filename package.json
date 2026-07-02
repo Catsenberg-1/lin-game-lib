@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Catsenberg-1/lin-game-lib#readme",
   "dependencies": {
+    "@netlify/blobs": "^7.4.0",
     "libsodium-wrappers": "^0.8.4"
   }
 }

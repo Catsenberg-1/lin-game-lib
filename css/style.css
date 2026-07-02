@@ -24,23 +24,26 @@
 
 body {
   font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  background: var(--bg);
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(123, 94, 167, 0.3) 0%, transparent 60%),
-    radial-gradient(ellipse at 20% 80%, rgba(201, 165, 75, 0.1) 0%, transparent 50%);
+  background: #1a1028;
   color: var(--text);
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 2rem;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* 主页全屏，不需要 padding */
+#view-home.active ~ .container,
+#view-home.active {
+  padding: 0;
+  margin: 0;
 }
 
 .container {
   width: 100%;
   max-width: 1200px;
-  padding: 1rem 2rem 3rem;
+  margin: 0 auto;
+  padding: 0;
 }
 
 /* --- View --- */
@@ -57,42 +60,609 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+
 /* ============================================================
-   主页视图（保留原风格）
+   主页 — 背景图 + 透明热区
    ============================================================ */
-.home-content { text-align: center; }
-.home-title { font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: 0.15em; }
-.home-subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 3rem; letter-spacing: 0.3em; }
-
-.module-cards {
-  display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;
+.bg-scene {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  /* 高度按图片比例自动撑开 (1280:2203 = width:height) */
+  aspect-ratio: 1280 / 2203;
+  background: url('../assets/bg-cabin.jpg') no-repeat center top;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
-.module-card {
-  background: var(--bg-card);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--radius);
-  padding: 3rem 2.5rem;
+
+/* --- SVG 热区覆盖层 --- */
+.hotzone-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hz-poly {
+  fill: rgba(255, 200, 60, 0.06);
+  stroke: rgba(255, 200, 60, 0.45);
+  stroke-width: 0.4;
   cursor: pointer;
-  transition: all 0.35s ease;
-  min-width: 240px; flex: 1; max-width: 320px;
-  position: relative; overflow: hidden;
+  pointer-events: auto;
+  transition: fill 0.3s, stroke 0.3s;
+  animation: zoneBreath 3s ease-in-out infinite;
 }
-.module-card::before {
-  content: ''; position: absolute; inset: 0; border-radius: var(--radius);
-  opacity: 0; transition: opacity 0.35s ease; z-index: 0;
-}
-.module-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  border-color: var(--gold);
-}
-.module-card:hover::before { opacity: 1; }
-.module-card.tarot::before { background: radial-gradient(circle at center, rgba(123,94,167,0.2), transparent 70%); }
-.module-card.zhouyi::before { background: radial-gradient(circle at center, rgba(201,165,75,0.2), transparent 70%); }
 
-.module-icon { font-size: 4rem; margin-bottom: 1rem; position: relative; z-index: 1; }
-.module-name { font-size: 1.6rem; font-weight: 600; letter-spacing: 0.1em; position: relative; z-index: 1; }
-.module-desc { color: var(--text-dim); margin-top: 0.5rem; font-size: 0.95rem; position: relative; z-index: 1; }
+@keyframes zoneBreath {
+  0%, 100% { stroke: rgba(255, 200, 60, 0.35); stroke-width: 0.3; }
+  50% { stroke: rgba(255, 200, 60, 0.65); stroke-width: 0.6; }
+}
+
+.hz-poly:hover {
+  fill: rgba(255, 200, 60, 0.22);
+  stroke: rgba(255, 200, 60, 1);
+  stroke-width: 0.9;
+  animation: none;
+  filter: drop-shadow(0 0 12px rgba(255, 200, 60, 0.55));
+}
+
+.hz-poly:active {
+  fill: rgba(255, 200, 60, 0.35);
+  filter: drop-shadow(0 0 20px rgba(255, 200, 60, 0.75));
+}
+
+/* ============================================================
+   壁炉 + 火光
+   ============================================================ */
+.pixel-fireplace {
+  position: absolute;
+  bottom: 15%; left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  z-index: 10;
+  cursor: pointer;
+  transition: filter 0.3s;
+}
+.pixel-fireplace:hover {
+  filter: brightness(1.15);
+}
+
+.fireplace-top {
+  height: 10px;
+  background: #5a3828;
+  margin: 0 -4px;
+  border-radius: 3px 3px 0 0;
+  border: 2px solid #3a1a08;
+  border-bottom: none;
+}
+
+.fireplace-mantle {
+  height: 28px;
+  background: #6a4838;
+  margin: 0 -4px;
+  border: 3px solid #3a1a08;
+  border-bottom: none;
+  position: relative;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  padding-bottom: 4px;
+}
+
+.candle {
+  width: 8px; height: 14px;
+  background: #e8d8c0;
+  border-radius: 2px 2px 0 0;
+  position: relative;
+}
+.flame {
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  width: 6px; height: 10px;
+  background: #ff9900;
+  border-radius: 50% 50% 20% 20%;
+  animation: candleFlicker 0.3s ease-in-out infinite alternate;
+}
+@keyframes candleFlicker {
+  0% { transform: translateX(-50%) scaleY(1) scaleX(1); }
+  100% { transform: translateX(-50%) scaleY(0.7) scaleX(1.3); }
+}
+
+.fireplace-body {
+  width: 100%;
+  height: 80px;
+  background: #3a2018;
+  border: 4px solid #3a1a08;
+  border-top: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 火光投射光晕 */
+.fire-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 80%, rgba(255,140,20,0.3) 0%, transparent 60%);
+  animation: fireGlow 2s ease-in-out infinite alternate;
+}
+@keyframes fireGlow {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* 火焰粒子 */
+.fire {
+  position: absolute;
+  bottom: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 60px; height: 60px;
+}
+
+.flame-particle {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50% 50% 10% 10%;
+  animation: fireDance 1s ease-in-out infinite alternate;
+}
+.fp1 {
+  left: 22px; width: 16px; height: 30px;
+  background: #ffcc00;
+  animation-delay: 0s;
+}
+.fp2 {
+  left: 14px; width: 14px; height: 24px;
+  background: #ff9900;
+  animation-delay: 0.2s;
+}
+.fp3 {
+  left: 32px; width: 14px; height: 26px;
+  background: #ff8800;
+  animation-delay: 0.4s;
+}
+.fp4 {
+  left: 24px; width: 12px; height: 20px;
+  background: #ffdd44;
+  animation-delay: 0.3s;
+}
+
+@keyframes fireDance {
+  0% { transform: scaleY(1) scaleX(1) translateY(0); }
+  100% { transform: scaleY(0.6) scaleX(1.2) translateY(-2px); }
+}
+
+/* 木柴 */
+.log {
+  position: absolute;
+  bottom: 0;
+  height: 8px;
+  background: #4a2810;
+  border-radius: 4px;
+}
+.l1 { left: 8px; width: 28px; transform: rotate(-15deg); }
+.l2 { left: 24px; width: 24px; transform: rotate(10deg); }
+
+.fireplace-floor {
+  height: 14px;
+  background: #5a3828;
+  margin: 0 -3px;
+  border: 3px solid #3a1a08;
+  border-top: none;
+  border-radius: 0 0 3px 3px;
+}
+
+/* ============================================================
+   桌子 + 水晶球 + 塔罗牌
+   ============================================================ */
+.pixel-table-area {
+  position: absolute;
+  bottom: 28%; left: 5%;
+  z-index: 15;
+}
+
+.pixel-table {
+  position: relative;
+  width: 150px;
+  cursor: pointer;
+}
+
+.table-top {
+  width: 150px;
+  height: 16px;
+  background: linear-gradient(180deg, #6a4830, #4a3020);
+  border: 3px solid #3a1a08;
+  border-radius: 4px 4px 2px 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* 水晶球 */
+.crystal-ball {
+  position: absolute;
+  top: -48px; left: 20px;
+  width: 44px; height: 44px;
+  cursor: pointer;
+  z-index: 16;
+}
+
+.ball-glass {
+  width: 100%; height: 100%;
+  background: radial-gradient(circle at 40% 35%, rgba(180,210,255,0.8) 0%, rgba(80,140,200,0.5) 40%, rgba(40,60,100,0.6) 100%);
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow:
+    0 0 15px rgba(100,160,220,0.5),
+    0 0 30px rgba(100,160,220,0.2),
+    inset 0 -4px 8px rgba(0,0,0,0.3);
+  animation: ballGlow 3s ease-in-out infinite;
+  position: relative;
+}
+
+.ball-glass::after {
+  content: '';
+  position: absolute;
+  top: 8px; left: 10px;
+  width: 10px; height: 6px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+
+@keyframes ballGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(100,160,220,0.5), 0 0 30px rgba(100,160,220,0.2); }
+  50% { box-shadow: 0 0 25px rgba(140,200,255,0.7), 0 0 50px rgba(100,180,240,0.35); }
+}
+
+.ball-sparkle {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  animation: sparkleFloat 2s ease-in-out infinite;
+}
+.ball-sparkle.s1 { top: 8px; left: 14px; animation-delay: 0s; }
+.ball-sparkle.s2 { top: 20px; left: 26px; animation-delay: 1s; }
+
+@keyframes sparkleFloat {
+  0%, 100% { opacity: 0; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-6px); }
+}
+
+/* 桌上塔罗牌 */
+.tarot-cards-spread {
+  position: absolute;
+  top: -24px; left: 70px;
+  display: flex;
+  gap: 2px;
+  cursor: pointer;
+  z-index: 15;
+}
+
+.mini-card {
+  width: 22px; height: 34px;
+  background: linear-gradient(135deg, #2a1a48, #1a1030);
+  border: 1.5px solid rgba(201,165,75,0.6);
+  border-radius: 3px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.5);
+  transition: transform 0.2s;
+}
+.pixel-table:hover .mini-card {
+  transform: translateY(-3px);
+}
+
+.tap-sign {
+  font-size: 0.45rem;
+  color: #c9a54b;
+  text-align: center;
+  margin-top: 6px;
+  text-shadow: 0 0 6px rgba(201,165,75,0.5);
+  animation: tapPulse 2s ease-in-out infinite;
+}
+
+@keyframes tapPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================
+   女巫 + 坩埚
+   ============================================================ */
+.pixel-cauldron-area {
+  position: absolute;
+  bottom: 22%; right: 2%;
+  z-index: 12;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* 坩埚 */
+.pixel-cauldron {
+  position: relative;
+  width: 60px;
+}
+
+.cauldron-body {
+  width: 60px; height: 44px;
+  background: linear-gradient(180deg, #3a3a3a, #1a1a1a);
+  border: 3px solid #2a2a2a;
+  border-radius: 0 0 50% 50%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+}
+
+.soup {
+  position: absolute;
+  bottom: 0; left: 2px; right: 2px;
+  height: 14px;
+  background: linear-gradient(180deg, #88cc44, #55aa22);
+  border-radius: 0 0 45% 45%;
+  animation: soupBubble 2s ease-in-out infinite;
+}
+
+@keyframes soupBubble {
+  0%, 100% { height: 14px; }
+  50% { height: 18px; }
+}
+
+.steam {
+  position: absolute;
+  width: 4px;
+  background: rgba(200,200,200,0.4);
+  border-radius: 50%;
+  animation: rise 2s ease-out infinite;
+}
+.steam.s1 { left: 12px; bottom: 42px; height: 10px; animation-delay: 0s; }
+.steam.s2 { left: 28px; bottom: 42px; height: 14px; animation-delay: 0.8s; }
+.steam.s3 { left: 44px; bottom: 42px; height: 8px; animation-delay: 1.6s; }
+
+@keyframes rise {
+  0% { opacity: 0.6; transform: translateY(0) scaleX(1); }
+  100% { opacity: 0; transform: translateY(-20px) scaleX(2); }
+}
+
+.cauldron-legs {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  margin-top: -1px;
+}
+.leg {
+  width: 8px; height: 10px;
+  background: #2a2a2a;
+  border-radius: 0 0 3px 3px;
+  border: 2px solid #1a1a1a;
+  border-top: none;
+}
+
+/* 女巫 */
+.pixel-witch {
+  position: relative;
+  width: 36px; height: 70px;
+  animation: witchBounce 3s ease-in-out infinite;
+}
+
+@keyframes witchBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.witch-hat {
+  position: relative;
+  width: 32px; height: 20px;
+  margin: 0 auto;
+}
+.witch-hat::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 6px;
+  background: #2a1050;
+  border-radius: 2px;
+  border: 2px solid #1a0830;
+}
+.witch-hat::after {
+  content: '';
+  position: absolute;
+  bottom: 4px; left: 4px;
+  width: 0; height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 18px solid #2a1050;
+}
+
+.witch-face {
+  width: 24px; height: 22px;
+  margin: 0 auto;
+  background: #fdddbb;
+  border-radius: 50%;
+  border: 2px solid #e8c8a0;
+  position: relative;
+}
+
+.eye {
+  position: absolute;
+  top: 6px;
+  width: 4px; height: 5px;
+  background: #1a1a1a;
+  border-radius: 50%;
+}
+.eye.left { left: 6px; }
+.eye.right { right: 6px; }
+
+.mouth {
+  position: absolute;
+  bottom: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 6px; height: 3px;
+  border-bottom: 2px solid #cc8866;
+  border-radius: 0 0 50% 50%;
+}
+
+.witch-body {
+  width: 28px; height: 28px;
+  margin: 0 auto;
+  background: #2a1050;
+  border-radius: 50% 50% 30% 30%;
+  border: 2px solid #1a0830;
+  position: relative;
+}
+
+.arm {
+  position: absolute;
+  top: 6px; right: -8px;
+  width: 12px; height: 4px;
+  background: #2a1050;
+  border-radius: 2px;
+  transform: rotate(-20deg);
+  transform-origin: left center;
+  animation: stir 1.5s ease-in-out infinite;
+}
+
+@keyframes stir {
+  0%, 100% { transform: rotate(-20deg); }
+  50% { transform: rotate(-35deg); }
+}
+
+/* ============================================================
+   八卦铜钱（周易入口）
+   ============================================================ */
+.pixel-bagua-area {
+  position: absolute;
+  top: 20%; right: 6%;
+  z-index: 12;
+  cursor: pointer;
+  text-align: center;
+}
+
+.bagua-plate {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #c9a54b 0%, #8a6a28 60%, #5a4018 100%);
+  border: 3px solid #8a6a28;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 10px rgba(201,165,75,0.3),
+    0 4px 8px rgba(0,0,0,0.5);
+  transition: transform 0.3s, box-shadow 0.3s;
+  animation: baguaSpin 20s linear infinite;
+}
+
+.pixel-bagua-area:hover .bagua-plate {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(201,165,75,0.6), 0 4px 8px rgba(0,0,0,0.5);
+}
+
+@keyframes baguaSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.bagua-inner {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #f0e8d0;
+  position: relative;
+  overflow: hidden;
+}
+
+.yin-yang {
+  width: 100%; height: 100%;
+  position: relative;
+}
+.yin-yang::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 50%;
+  background: #1a1a1a;
+  border-radius: 50% 0 0 50%;
+}
+.yin-yang::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 50%;
+  background: #f0e8d0;
+  border-radius: 0 50% 50% 0;
+}
+
+/* 铜钱 */
+.coin {
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ddcc88, #aa8830);
+  border: 2px solid #886620;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+}
+.coin::after {
+  content: '□';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 6px;
+  color: #664400;
+}
+.c1 { top: -4px; right: -10px; animation: coinDrop 3s ease-in-out infinite; }
+.c2 { bottom: 2px; left: -8px; animation: coinDrop 3s ease-in-out 1s infinite; }
+.c3 { bottom: -12px; right: 4px; animation: coinDrop 3s ease-in-out 2s infinite; }
+
+@keyframes coinDrop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.bagua-label {
+  font-size: 0.4rem;
+  color: #c9a54b;
+  margin-top: 6px;
+  text-shadow: 0 0 6px rgba(201,165,75,0.5);
+}
+
+/* ============================================================
+   地毯
+   ============================================================ */
+.pixel-rug {
+  position: absolute;
+  bottom: 3%; left: 10%; right: 10%;
+  height: 14px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #662222 0px, #662222 8px,
+      #aa4444 8px, #aa4444 12px,
+      #883333 12px, #883333 16px,
+      #662222 16px, #662222 24px
+    );
+  border: 2px solid #441818;
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+/* ============================================================
+   场景响应式缩放
+   ============================================================ */
+@media (min-width: 480px) {
+  .cabin-scene {
+    min-height: 100vh;
+    height: auto;
+  }
+}
+
+@media (max-width: 370px) {
+  .pixel-window { width: 70px; height: 90px; right: 4%; }
+  .pixel-fireplace { width: 110px; }
+  .pixel-table-area { left: 2%; }
+  .pixel-bagua-area { right: 2%; }
+  .pixel-bookshelf { width: 55px; height: 110px; }
+}
 
 /* ============================================================
    公共导航
@@ -209,6 +779,52 @@ body {
     transform: translate(-50%, -50%) rotate(0deg) translateY(0);
     opacity: 0;
   }
+}
+
+/* ============================================================
+   神秘学风格累计计数
+   ============================================================ */
+.mystic-counter {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 0.8rem 1.5rem;
+  font-family: "Georgia", "Times New Roman", "KaiTi", "STKaiti", "楷体", serif;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  color: #c9a54b;
+  text-shadow: 0 0 8px rgba(201,165,75,0.4), 0 0 20px rgba(201,165,75,0.15);
+  line-height: 1.8;
+  animation: mysticGlow 3s ease-in-out infinite;
+}
+
+@keyframes mysticGlow {
+  0%, 100% { text-shadow: 0 0 8px rgba(201,165,75,0.4), 0 0 20px rgba(201,165,75,0.15); }
+  50% { text-shadow: 0 0 12px rgba(201,165,75,0.6), 0 0 30px rgba(201,165,75,0.25); }
+}
+
+.mystic-normal {
+  font-size: 1.15rem;
+}
+
+.mystic-number {
+  font-size: 1.6rem;
+  font-weight: bold;
+  font-style: normal;
+  color: #e0c878;
+  text-shadow: 0 0 12px rgba(224,200,120,0.7), 0 0 30px rgba(201,165,75,0.4);
+  display: inline-block;
+  min-width: 2.5em;
+  transition: all 0.5s ease;
+}
+
+.mystic-shrink {
+  display: inline;
+}
+
+.mystic-shrink .mystic-char {
+  display: inline-block;
+  transition: font-size 0.3s ease;
+  color: #b8944a;
 }
 
 /* ============================================================
