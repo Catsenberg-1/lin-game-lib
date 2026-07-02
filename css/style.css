@@ -22,25 +22,41 @@
   --radius: 16px;
 }
 
-body {
-  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  background: #1a1028;
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
 
-/* 主页全屏，不需要 padding */
-#view-home.active ~ .container,
-#view-home.active {
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  background: #000;
+  color: var(--text);
+}
+
+#view-home {
   padding: 0;
   margin: 0;
+}
+
+#view-home.active {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* 非主页视图恢复滚动 */
+.view:not(#view-home).active ~ .container,
+.view:not(#view-home).active {
+  height: auto;
+  overflow: visible;
+  min-height: 100vh;
 }
 
 .container {
   width: 100%;
+  height: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0;
@@ -67,12 +83,21 @@ body {
 .bg-scene {
   position: relative;
   width: 100%;
-  max-width: 480px;
+  height: 100%;
   margin: 0 auto;
-  /* 高度按图片比例自动撑开 (1280:2203 = width:height) */
-  aspect-ratio: 1280 / 2203;
-  background: url('../assets/bg-cabin.jpg') no-repeat center top;
-  background-size: 100% 100%;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .bg-scene {
+    max-width: 480px;
+  }
+}
+
+.bg-img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
