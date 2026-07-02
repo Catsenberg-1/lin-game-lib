@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>获取热区数据</title></head>
+<body style="background:#111;color:#0f0;font-family:monospace;padding:20px;">
+<h2>你的热区坐标数据：</h2>
+<pre id="data" style="background:#000;padding:16px;border-radius:8px;white-space:pre-wrap;word-break:break-all;"></pre>
+<button onclick="copy()" style="padding:10px 20px;font-size:16px;cursor:pointer;">📋 复制数据</button>
+<span id="ok" style="color:#0f0;margin-left:10px;display:none;">✓ 已复制</span>
+<script>
+const raw = localStorage.getItem('divination_hotzones_v2');
+document.getElementById('data').textContent = raw || '(无数据 — 请先在 editor.html 中保存)';
+function copy() {
+  const d = document.getElementById('data').textContent;
+  if (d && d !== '(无数据)') {
+    navigator.clipboard.writeText(d);
+    document.getElementById('ok').style.display = 'inline';
+  }
+}
+</script>
+</body></html>

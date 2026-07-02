@@ -118,6 +118,8 @@
   <svg id="svg-layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
 </div>
 
+<textarea id="json-output" style="display:none;position:fixed;bottom:40px;left:10px;right:10px;height:120px;background:#000;color:#0f0;font-size:11px;z-index:200;padding:8px;border:1px solid #0f0;border-radius:6px;" readonly></textarea>
+
 <div class="info-bar">
   <span>🖱 <span class="key">单击</span>添加顶点</span>
   <span>✅ <span class="key">点「完成闭合」</span>生成热区</span>
@@ -382,19 +384,17 @@
     }));
     localStorage.setItem('divination_hotzones_v2', JSON.stringify(data));
 
-    // 生成 clip-path CSS
-    let css = '';
-    data.forEach((poly, i) => {
-      const cls = i === 0 ? 'hotzone-tarot' : (i === 1 ? 'hotzone-zhouyi' : `hotzone-${i}`);
-      const ptsStr = poly.points.map(p => `${p.x.toFixed(1)}% ${p.y.toFixed(1)}%`).join(', ');
-      css += `.${cls} {\n  clip-path: polygon(${ptsStr});\n}\n`;
-    });
+    const json = JSON.stringify(data, null, 2);
+    console.log('=== 热区数据 ===');
+    console.log(json);
 
-    navigator.clipboard.writeText(css).then(() => {
-      statusMsg.textContent = '💾 已保存！CSS clip-path 已复制到剪贴板';
+    navigator.clipboard.writeText(json).then(() => {
+      statusMsg.textContent = '💾 已保存！JSON数据已复制到剪贴板，直接粘贴给我';
     }).catch(() => {
-      statusMsg.textContent = '💾 已保存！手动查看 console';
-      console.log(css);
+      statusMsg.textContent = '💾 已保存！请看下方文本框';
+      // fallback: show in a textarea
+      document.getElementById('json-output').value = json;
+      document.getElementById('json-output').style.display = 'block';
     });
 
     renderSVG();
