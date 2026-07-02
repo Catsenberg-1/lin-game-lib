@@ -1,0 +1,24 @@
+{
+  "name": "divination",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Catsenberg-1/lin-game-lib.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Catsenberg-1/lin-game-lib/issues"
+  },
+  "homepage": "https://github.com/Catsenberg-1/lin-game-lib#readme",
+  "dependencies": {
+    "libsodium-wrappers": "^0.8.4"
+  }
+}
