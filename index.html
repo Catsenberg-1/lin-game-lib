@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ 占卜 ✨</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- ==================== 主页视图 ==================== -->
+    <div id="view-home" class="view active">
+      <div class="home-content">
+        <h1 class="home-title">✨ 占 卜 ✨</h1>
+        <p class="home-subtitle">探索命运的指引</p>
+
+        <div class="module-cards">
+          <!-- 塔罗牌 -->
+          <div class="module-card tarot" id="btn-tarot">
+            <div class="module-icon">🔮</div>
+            <div class="module-name">塔 罗 牌</div>
+            <div class="module-desc">抽取三张牌，解读命运的讯息</div>
+          </div>
+
+          <!-- 周易 -->
+          <div class="module-card zhouyi" id="btn-zhouyi">
+            <div class="module-icon">☯</div>
+            <div class="module-name">周 易</div>
+            <div class="module-desc">六十四卦，洞悉天地玄机</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 塔罗视图 ==================== -->
+    <div id="view-tarot" class="view">
+      <div class="tarot-header">
+        <button class="btn-back" id="btn-back-home">← 返回</button>
+        <h2 class="tarot-title">🔮 塔罗占卜</h2>
+      </div>
+
+      <div class="cards-area" id="cards-container">
+        <!-- JS 动态渲染卡牌 -->
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" id="btn-redraw">🔄 重新抽牌</button>
+      </div>
+    </div>
+
+    <!-- ==================== 周易视图（占位） ==================== -->
+    <div id="view-zhouyi" class="view">
+      <div class="tarot-header">
+        <button class="btn-back" id="btn-back-zhouyi">← 返回</button>
+        <h2 class="tarot-title">☯ 周易</h2>
+      </div>
+
+      <div class="placeholder-content">
+        <div class="placeholder-icon">🏗️</div>
+        <div class="placeholder-title">周易模块开发中</div>
+        <div class="placeholder-text">
+          六十四卦 · 六爻起卦 · 卦象解读<br>
+          敬请期待……
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 洗牌动画遮罩 ==================== -->
+    <div id="shuffle-overlay" class="shuffle-overlay">
+      <div class="shuffle-text">洗牌中...</div>
+      <div class="shuffle-stars">🔮</div>
+    </div>
+
+  </div>
+
+  <!-- JS -->
+  <script src="js/tarot-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
