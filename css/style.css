@@ -23,7 +23,6 @@
 }
 
 html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
 }
@@ -32,6 +31,7 @@ body {
   font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   background: #000;
   color: var(--text);
+  min-height: 100vh;
 }
 
 #view-home {
@@ -46,20 +46,13 @@ body {
   z-index: 1;
 }
 
-/* 非主页视图恢复滚动 */
-.view:not(#view-home).active ~ .container,
-.view:not(#view-home).active {
-  height: auto;
-  overflow: visible;
-  min-height: 100vh;
-}
-
 .container {
   width: 100%;
-  height: 100%;
-  max-width: 1200px;
+  max-width: 480px;
   margin: 0 auto;
   padding: 0;
+  min-height: 100vh;
+  background: #0a0510;
 }
 
 /* --- View --- */
@@ -102,41 +95,51 @@ body {
   image-rendering: crisp-edges;
 }
 
-/* --- SVG 热区覆盖层 --- */
-.hotzone-svg {
+/* 底部图标按钮 */
+.home-btns {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 10;
-  pointer-events: none;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  z-index: 20;
 }
 
-.hz-poly {
-  fill: rgba(255, 200, 60, 0.06);
-  stroke: rgba(255, 200, 60, 0.45);
-  stroke-width: 0.4;
+.home-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(30, 10, 40, 0.7);
+  border: 1px solid rgba(201, 165, 75, 0.4);
+  border-radius: 16px;
+  padding: 14px 20px;
   cursor: pointer;
-  pointer-events: auto;
-  transition: fill 0.3s, stroke 0.3s;
-  animation: zoneBreath 3s ease-in-out infinite;
+  font-size: 2rem;
+  color: #e8e0f0;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
-@keyframes zoneBreath {
-  0%, 100% { stroke: rgba(255, 200, 60, 0.35); stroke-width: 0.3; }
-  50% { stroke: rgba(255, 200, 60, 0.65); stroke-width: 0.6; }
+.home-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(201, 165, 75, 0.8);
+  box-shadow: 0 0 25px rgba(255, 200, 60, 0.3);
+  background: rgba(40, 15, 50, 0.85);
 }
 
-.hz-poly:hover {
-  fill: rgba(255, 200, 60, 0.22);
-  stroke: rgba(255, 200, 60, 1);
-  stroke-width: 0.9;
-  animation: none;
-  filter: drop-shadow(0 0 12px rgba(255, 200, 60, 0.55));
+.home-btn:active {
+  transform: scale(0.95);
 }
 
-.hz-poly:active {
-  fill: rgba(255, 200, 60, 0.35);
-  filter: drop-shadow(0 0 20px rgba(255, 200, 60, 0.75));
+.home-btn span {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: #c9a54b;
 }
 
 /* ============================================================
