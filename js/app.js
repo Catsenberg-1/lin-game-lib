@@ -41,31 +41,87 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================
-  // 主页导航按钮
+  // 主页动态按钮（从 btn-editor.html 保存的配置读取）
   // ========================
-  const btnTarotHome = document.getElementById('btn-tarot-home');
-  const btnZhouyiHome = document.getElementById('btn-zhouyi-home');
-  if (btnTarotHome) btnTarotHome.addEventListener('click', () => showView('spreadSelect'));
-  if (btnZhouyiHome) btnZhouyiHome.addEventListener('click', () => showView('zhouyi'));
+  function applyHomeButtons() {
+    const scene = document.getElementById('bg-scene');
+    if (!scene) return;
+
+    // 清除旧按钮
+    scene.querySelectorAll('.dyn-btn').forEach(el => el.remove());
+
+    // 读取配置
+    let btns = [];
+    try {
+      btns = JSON.parse(localStorage.getItem('divination_btns') || '[]');
+    } catch(e) {}
+
+    // 默认按钮（统一风格：大圆角 + 亮眼文字）
+    if (btns.length === 0) {
+      btns = [
+        { id:1, name:'🔮 塔罗占卜', shape:'rounded', x:21.46, y:68.80, w:14, h:8, opacity:0.25, fill:'rgba(60,20,80,0.7)', stroke:'#e0c878', strokeW:2, color:'#ffd700', fontSize:0.55, href:'tarot' },
+        { id:2, name:'☯ 周易占卜', shape:'rounded', x:61.59, y:81.80, w:14, h:8, opacity:0.25, fill:'rgba(60,20,80,0.7)', stroke:'#e0c878', strokeW:2, color:'#ffd700', fontSize:0.55, href:'zhouyi' },
+      ];
+    }
+
+    btns.filter(b => b.href).forEach(b => {
+      const el = document.createElement('button');
+      el.className = 'dyn-btn';
+      el.textContent = b.shape === 'circle' && !b.name ? '' : (b.name || '');
+      el.style.left = b.x + '%';
+      el.style.top = b.y + '%';
+      el.style.width = b.w + '%';
+      el.style.height = b.h + '%';
+      el.style.opacity = b.opacity;
+      el.style.background = b.fill;
+      el.style.border = b.strokeW + 'px solid ' + b.stroke;
+      el.style.color = b.color;
+      el.style.fontSize = b.fontSize + 'rem';
+      el.style.position = 'absolute';
+      el.style.cursor = 'pointer';
+      el.style.zIndex = '20';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.transition = 'all 0.3s ease';
+      el.style.borderRadius = b.shape === 'circle' ? '50%' : b.shape === 'rounded' ? '12px' : b.shape === 'oval' ? '50%' : '2px';
+
+      // hover 效果
+      el.addEventListener('mouseenter', () => {
+        el.style.opacity = Math.min(1, b.opacity * 3);
+        el.style.boxShadow = '0 0 20px ' + b.stroke;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.opacity = b.opacity;
+        el.style.boxShadow = 'none';
+      });
+
+      // 点击跳转
+      const href = b.href || '';
+      el.addEventListener('click', () => {
+        if (href === 'tarot' || href === '#tarot') showView('spreadSelect');
+        else if (href === 'zhouyi' || href === '#zhouyi') showView('zhouyi');
+        else if (href.startsWith('#') || href.startsWith('/')) showView(href.replace('#', '').replace('/', ''));
+      });
+
+      scene.appendChild(el);
+    });
+  }
+
+  applyHomeButtons();
 
   // 牌阵选择 → 返回主页
   document.getElementById('btn-back-from-spread').addEventListener('click', () => {
     showView('home');
   });
 
-  // 牌阵卡片点击切换
+  // 牌阵卡片点击直接进入抽牌
   document.querySelectorAll('.spread-card:not(.disabled)').forEach(card => {
     card.addEventListener('click', () => {
-      document.querySelectorAll('.spread-card').forEach(c => c.classList.remove('active'));
-      card.classList.add('active');
       currentSpread = card.dataset.spread;
+      showView('tarotDraw');
+      startFanDraw();
     });
-  });
-
-  // 开始抽牌 → 进入扇面选牌
-  document.getElementById('btn-start-draw').addEventListener('click', () => {
-    showView('tarotDraw');
-    startFanDraw();
   });
 
   // 返回牌阵选择
@@ -144,37 +200,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================
-  // 渲染扇面
+  // 渲染圆形牌阵
   // ========================
   function renderFan() {
     fanContainer.innerHTML = '';
     const total = fanDeck.length;
 
     const stage = document.querySelector('.fan-stage');
-    const stageWidth = stage.clientWidth;
-    const stageHeight = stage.clientHeight;
-
-    const cx = stageWidth / 2;
-    const cy = stageHeight + 120;
-    const radius = Math.min(stageWidth * 0.65, 520);
-    const arcDeg = 140;
-    const startAngle = -arcDeg / 2;
-    const endAngle = arcDeg / 2;
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+    const cx = stageW / 2;
+    const cy = stageH / 2;
+    const radius = Math.min(stageW, stageH) * 0.40;
 
     fanDeck.forEach((card, i) => {
-      const angleDeg = startAngle + (i / (total - 1)) * (endAngle - startAngle);
-      const angleRad = (angleDeg * Math.PI) / 180;
-
-      const x = cx + radius * Math.sin(angleRad);
-      const y = cy - radius * Math.cos(angleRad);
-      const rotate = angleDeg * 0.7;
-      const halfW = 30;
-      const halfH = 48;
+      const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      const rotate = (angle * 180) / Math.PI + 90;
+      const halfW = 22;
+      const halfH = 35;
 
       const el = document.createElement('div');
       el.className = 'fan-card';
       el.dataset.index = i;
-      el.style.transform = `translate(${cx - halfW}px, ${cy - halfH - 150}px) rotate(0deg) scale(0.3)`;
+      el.style.width = '44px';
+      el.style.height = '70px';
+      el.style.transform = `translate(${cx - halfW}px, ${cy - halfH}px) rotate(0deg) scale(0.2)`;
       el.style.opacity = '0';
       el.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
 
@@ -184,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       fanContainer.appendChild(el);
 
-      // 飞入最终位置
       setTimeout(() => {
         el.style.transform = `translate(${x - halfW}px, ${y - halfH}px) rotate(${rotate}deg) scale(1)`;
         el.style.opacity = '1';
@@ -194,36 +245,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================
-  // 卡牌点击 — 选中/取消 飞入卡槽
+  // 卡牌点击 — 选中消失，无高亮
   // ========================
   function onCardClick(index, el, event) {
-    // 如果已选中 → 取消选中
+    // 已选中 → 取消选中（恢复）
     if (el.classList.contains('picked')) {
       el.classList.remove('picked');
-      el.style.pointerEvents = '';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
       const pos = selectedIndices.indexOf(index);
-      if (pos >= 0) {
-        selectedIndices.splice(pos, 1);
-      }
+      if (pos >= 0) selectedIndices.splice(pos, 1);
       updateSlots();
       drawTitle.textContent = selectedIndices.length > 0
         ? `🃏 已选 ${selectedIndices.length} / 3 张牌`
-        : '🃏 请从扇面中选取 3 张牌';
+        : '🃏 请从选中 3 张牌';
       confirmBtn.disabled = true;
       return;
     }
 
-    // 已满 3 张，不允许再加
     if (selectedIndices.length >= 3) return;
 
-    // 标记为已选
+    // 直接透明消失
     el.classList.add('picked');
+    el.style.opacity = '0';
+    el.style.pointerEvents = 'none';
     selectedIndices.push(index);
-
-    // 飞行动画
-    const cardRect = el.getBoundingClientRect();
-    const slotIndex = selectedIndices.length - 1;
-    flyCardToSlot(cardRect, slotIndex);
 
     updateSlots();
     drawTitle.textContent = `🃏 已选 ${selectedIndices.length} / 3 张牌`;
@@ -232,47 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmBtn.disabled = false;
       drawTitle.textContent = '✨ 已选 3 张，请确认';
     }
-  }
-
-  // ========================
-  // 卡牌飞入卡槽动画
-  // ========================
-  function flyCardToSlot(fromRect, slotIndex) {
-    // 获取目标卡槽位置
-    const slots = selectedCardsEl.querySelectorAll('.selected-slot');
-    const targetSlot = slots[slotIndex];
-    if (!targetSlot) return;
-
-    const toRect = targetSlot.getBoundingClientRect();
-
-    // 创建飞行克隆
-    const fly = document.createElement('div');
-    fly.className = 'fly-card';
-    fly.style.position = 'fixed';
-    fly.style.left = fromRect.left + 'px';
-    fly.style.top = fromRect.top + 'px';
-    fly.style.width = fromRect.width + 'px';
-    fly.style.height = fromRect.height + 'px';
-    fly.style.transform = 'rotate(0deg)';
-    fly.style.transition = 'none';
-    document.body.appendChild(fly);
-
-    // 强制 reflow 再设置目标
-    fly.offsetHeight;
-
-    const dx = toRect.left + toRect.width / 2 - (fromRect.left + fromRect.width / 2);
-    const dy = toRect.top + toRect.height / 2 - (fromRect.top + fromRect.height / 2);
-
-    fly.style.transition = 'all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    fly.style.transform = `translate(${dx}px, ${dy}px) scale(${toRect.width / fromRect.width})`;
-
-    // 动画结束后移除克隆，高亮卡槽
-    fly.addEventListener('transitionend', () => {
-      fly.remove();
-      // 卡槽弹跳
-      targetSlot.classList.add('filled');
-      targetSlot.offsetHeight;
-    });
   }
 
   // ========================
@@ -323,7 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function clearSelection() {
     document.querySelectorAll('.fan-card.picked').forEach(el => {
       el.classList.remove('picked');
-      el.style.pointerEvents = '';
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
     });
     selectedIndices = [];
     updateSlots();
