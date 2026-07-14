@@ -96,16 +96,34 @@
       </div>
     </div>
 
-    <!-- ==================== 周易视图（占位） ==================== -->
+    <!-- ==================== 周易视图 ==================== -->
     <div id="view-zhouyi" class="view">
       <div class="tarot-header">
         <button class="btn-back" id="btn-back-zhouyi">← 返回</button>
-        <h2 class="tarot-title">☯ 周易</h2>
+        <h2 class="tarot-title">☯ 周易 · 六爻起卦</h2>
       </div>
-      <div class="placeholder-content">
-        <div class="placeholder-icon">🏗️</div>
-        <div class="placeholder-title">周易模块开发中</div>
-        <div class="placeholder-text">六十四卦 · 六爻起卦 · 卦象解读<br>敬请期待……</div>
+
+      <!-- 起卦区 -->
+      <div id="zhouyi-cast">
+        <div class="zy-coins" id="zy-coins">
+          <div class="zy-coin c1">🪙</div>
+          <div class="zy-coin c2">🪙</div>
+          <div class="zy-coin c3">🪙</div>
+        </div>
+        <div class="zy-lines" id="zy-lines"></div>
+        <div class="actions">
+          <button class="btn-primary" id="btn-cast">🎲 投掷铜钱</button>
+          <p class="zy-hint" id="zy-hint">默念心中所问，点击投掷六次</p>
+        </div>
+      </div>
+
+      <!-- 结果区 -->
+      <div id="zhouyi-result" style="display:none;">
+        <div class="zy-hexagrams" id="zy-hexagrams"></div>
+        <div class="zy-reading" id="zy-reading"></div>
+        <div class="actions" style="margin-top:1rem;">
+          <button class="btn-primary" id="btn-recast">🔄 重新起卦</button>
+        </div>
       </div>
     </div>
 

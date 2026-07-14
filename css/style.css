@@ -673,15 +673,18 @@ body {
   background: var(--bg-card);
   border: 2px solid rgba(255,255,255,0.08);
   border-radius: var(--radius);
-  padding: 2rem 1.5rem;
+  padding: 2rem 1rem;
   cursor: pointer;
   transition: all 0.35s ease;
   text-align: center;
-  flex: 1; min-width: 200px; max-width: 280px;
-  min-height: 190px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 280px;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   position: relative;
 }
 .spread-card:hover {
@@ -1066,12 +1069,35 @@ body {
 }
 
 /* ============================================================
-   周易占位
+   周易模块
    ============================================================ */
-.placeholder-content { text-align: center; padding: 4rem 2rem; }
-.placeholder-icon { font-size: 5rem; margin-bottom: 1.5rem; }
-.placeholder-title { font-size: 1.8rem; letter-spacing: 0.1em; margin-bottom: 1rem; }
-.placeholder-text { color: var(--text-dim); font-size: 1rem; line-height: 1.8; }
+.zy-coins { display: flex; justify-content: center; gap: 1.5rem; margin: 2rem 0 1.5rem; }
+.zy-coin { font-size: 3rem; transition: transform 0.6s ease; }
+.zy-coin.tossing { animation: coinFlip 0.15s ease-in-out infinite alternate; }
+.zy-coin.heads { transform: rotateY(0deg); }
+.zy-coin.tails { transform: rotateY(180deg); }
+@keyframes coinFlip { 0% { transform: rotateY(0deg) scale(1); } 100% { transform: rotateY(180deg) scale(0.9); } }
+
+.zy-lines { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 1rem 0; min-height: 240px; }
+.zy-line-row { display: flex; align-items: center; gap: 12px; animation: lineAppear 0.5s ease; }
+@keyframes lineAppear { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+.zy-line-symbol { font-size: 1.6rem; width: 40px; text-align: center; }
+.zy-line-label { font-size: 0.8rem; color: var(--text-dim); width: 60px; }
+.zy-line-num { font-size: 0.7rem; color: var(--text-dim); width: 30px; text-align: center; }
+.zy-line-changing { color: #e0c878 !important; font-weight: bold; }
+
+.zy-hint { color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem; }
+
+.zy-hexagrams { display: flex; justify-content: center; gap: 2rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.zy-hex { text-align: center; }
+.zy-hex-lines { font-size: 2rem; line-height: 1.6; font-family: monospace; }
+.zy-hex-name { color: var(--gold-light); font-size: 1rem; margin-top: 0.5rem; }
+.zy-hex-label { font-size: 0.75rem; color: var(--text-dim); }
+
+.zy-reading { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); padding: 1.5rem; margin: 1rem 0; }
+.zy-reading h3 { color: var(--gold-light); margin-bottom: 0.5rem; }
+.zy-reading p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.7; }
 
 /* ============================================================
    响应式

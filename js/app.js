@@ -476,4 +476,171 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
   });
 
+  // ========================
+  // 周易 · 六爻起卦
+  // ========================
+  const TRIGRAMS = ['☷坤','☶艮','☵坎','☴巽','☳震','☲离','☱兑','☰乾'];
+  const TRIGRAM_NAMES = ['坤','艮','坎','巽','震','离','兑','乾'];
+  const HEXAGRAMS = {
+    '11':{name:'泰',judge:'天地交泰，万物通。小往大来，吉亨。',desc:'通泰、顺利、上下交融，事业顺遂，万事亨通。'},
+    '12':{name:'否',judge:'天地不交，否。不利君子贞，大往小来。',desc:'闭塞、不通、困顿，宜守不宜进，静待时机。'},
+    '12':{name:'否',judge:'天地不交，否。',desc:'闭塞不通，宜守不宜进。'},
+    '21':{name:'大壮',judge:'大壮，利贞。',desc:'强盛壮大，宜守正。'},
+    '22':{name:'夬',judge:'夬，扬于王庭。',desc:'决断、果断，去除小人。'},
+    '31':{name:'大有',judge:'大有，元亨。',desc:'丰盛富有，大亨通。'},
+    '32':{name:'睽',judge:'睽，小事吉。',desc:'乖离、分歧，小事可成。'},
+    '33':{name:'兑',judge:'兑，亨利贞。',desc:'喜悦、言说，人际和谐。'},
+    '34':{name:'归妹',judge:'归妹，征凶无攸利。',desc:'婚嫁、结合，宜慎不宜急。'},
+    '35':{name:'履',judge:'履虎尾不咥人，亨。',desc:'谨慎行事，如履虎尾，终能亨通。'},
+    '36':{name:'中孚',judge:'中孚豚鱼吉，利涉大川。',desc:'诚信、信实，能感化万物。'},
+    '37':{name:'睽',judge:'睽，小事吉。',desc:'乖离、分歧，小事可成。'},
+    '38':{name:'节',judge:'节亨，苦节不可贞。',desc:'节制、适度，过犹不及。'},
+    '41':{name:'小畜',judge:'小畜亨，密云不雨。',desc:'小有积蓄，待时而发。'},
+    '42':{name:'需',judge:'需有孚，光亨贞吉，利涉大川。',desc:'等待、需求，诚心守正则吉。'},
+    '43':{name:'大畜',judge:'大畜利贞，不家食吉，利涉大川。',desc:'大有积蓄，宜外用不宜家居。'},
+    '44':{name:'乾',judge:'乾，元亨利贞。',desc:'刚健不息，创始万物，大吉大利。'},
+    '45':{name:'小过',judge:'小过亨利贞，可小事不可大事。',desc:'小有过越，小事可行，大事宜慎。'},
+    '46':{name:'大过',judge:'大过栋桡，利有攸往亨。',desc:'大为过越，如梁弯曲，宜变通。'},
+    '47':{name:'讼',judge:'讼有孚窒惕，中吉终凶。',desc:'争讼、纠纷，宜和解不宜对抗。'},
+    '48':{name:'同人',judge:'同人于野，亨。利涉大川，利君子贞。',desc:'志同道合，团结协作，亨通。'},
+    '51':{name:'蛊',judge:'蛊元亨，利涉大川。先甲三日后甲三日。',desc:'整治弊病，拨乱反正。'},
+    '52':{name:'姤',judge:'姤女壮，勿用取女。',desc:'邂逅、相遇，宜审慎。'},
+    '53':{name:'巽',judge:'巽小亨，利有攸往，利见大人。',desc:'柔顺、渗透，顺势而行。'},
+    '54':{name:'井',judge:'井改邑不改井，无丧无得。',desc:'如井养人，不变应万变。'},
+    '55':{name:'升',judge:'升元亨，用见大人勿恤，南征吉。',desc:'上升、进取，宜向南。'},
+    '56':{name:'蛊',judge:'蛊元亨，利涉大川。',desc:'整治弊病，拨乱反正。'},
+    '57':{name:'涣',judge:'涣亨，王假有庙。利涉大川。',desc:'涣散、离散，宜聚合人心。'},
+    '58':{name:'渐',judge:'渐女归吉利贞。',desc:'渐进、逐步，如女子出嫁。'},
+    '61':{name:'大畜',judge:'大畜利贞。',desc:'大有积蓄。'},
+    '62':{name:'困',judge:'困亨贞。大人吉无咎。',desc:'困顿、受困，守正可解。'},
+    '63':{name:'鼎',judge:'鼎元吉亨。',desc:'革新、鼎立，去旧迎新。'},
+    '64':{name:'未济',judge:'未济亨小狐汔济濡其尾无攸利。',desc:'事未成，如小狐渡河，慎始慎终。'},
+    '65':{name:'解',judge:'解利西南。无所往其来复吉。有攸往夙吉。',desc:'解脱、化解，宜速不宜迟。'},
+    '66':{name:'蒙',judge:'蒙亨。匪我求童蒙，童蒙求我。',desc:'蒙昧、启蒙，学然后知。'},
+    '67':{name:'师',judge:'师贞丈人吉无咎。',desc:'统兵、率众，宜师出有名。'},
+    '68':{name:'遁',judge:'遁亨，小利贞。',desc:'退避、隐退，宜适时而退。'},
+    '71':{name:'明夷',judge:'明夷利艰贞。',desc:'光明受伤，宜隐忍待时。'},
+    '72':{name:'屯',judge:'屯元亨利贞。勿用有攸往。',desc:'初创艰难，如草芽破土，宜守不宜急。'},
+    '73':{name:'同人',judge:'同人于野亨。',desc:'志同道合。'},
+    '74':{name:'豫',judge:'豫利建侯行师。',desc:'豫悦、安乐，宜行动。'},
+    '75':{name:'旅',judge:'旅小亨，旅贞吉。',desc:'行旅、漂泊，宜柔顺守正。'},
+    '76':{name:'咸',judge:'咸亨利贞，取女吉。',desc:'感通、感应，如男女相悦。'},
+    '77':{name:'艮',judge:'艮其背不获其身，行其庭不见其人。',desc:'止息、静止，知止不殆。'},
+    '78':{name:'谦',judge:'谦亨，君子有终。',desc:'谦逊、谦卑，终获善果。'},
+    '81':{name:'晋',judge:'晋康侯用锡马蕃庶，昼日三接。',desc:'前进、晋升，如旭日东升。'},
+    '82':{name:'比',judge:'比吉。原筮元永贞无咎。',desc:'亲比、团结，择善而从。'},
+    '83':{name:'观',judge:'观盥而不荐，有孚颙若。',desc:'观察、审视，宜静观其变。'},
+    '84':{name:'坤',judge:'坤，元亨利牝马之贞。君子有攸往，先迷后得主。',desc:'柔顺包容，厚德载物，先迷后得。'},
+    '85':{name:'萃',judge:'萃亨，王假有庙，利见大人。',desc:'聚集、会合，人心所向。'},
+    '86':{name:'否',judge:'否之匪人，不利君子贞。',desc:'闭塞不通。'},
+    '87':{name:'剥',judge:'剥不利有攸往。',desc:'剥落、衰败，君子待时。'},
+    '88':{name:'复',judge:'复亨。出入无疾，朋来无咎。',desc:'回复、复兴，一阳来复。'},
+  };
+
+  function getHexagramKey(lower, upper) { return String(lower) + String(upper); }
+  function getHexagramData(lower, upper) {
+    const key = getHexagramKey(lower, upper);
+    return HEXAGRAMS[key] || { name:'未名', judge:'卦辞未收录', desc:'请参照易经原文。' };
+  }
+
+  let zyCastCount = 0;
+  let zyLines = []; // [{value:6|7|8|9, changing:bool}]
+
+  document.getElementById('btn-cast').addEventListener('click', () => {
+    if (zyCastCount >= 6) return;
+    const coins = document.querySelectorAll('.zy-coin');
+    coins.forEach(c => { c.classList.add('tossing'); c.textContent = '🪙'; });
+    document.getElementById('zy-hint').textContent = '掷出中...';
+
+    setTimeout(() => {
+      coins.forEach(c => c.classList.remove('tossing'));
+      // 随机三枚铜钱结果
+      const tosses = [Math.random()>0.5, Math.random()>0.5, Math.random()>0.5].map(h => h ? '🪙' : '🪨');
+      const heads = tosses.filter(t => t === '🪙').length;
+      let value, label, changing;
+      if (heads === 3) { value = 9; label = '老阳 ⚊→⚋'; changing = true; }
+      else if (heads === 2) { value = 7; label = '少阳 ⚊'; changing = false; }
+      else if (heads === 1) { value = 8; label = '少阴 ⚋'; changing = false; }
+      else { value = 6; label = '老阴 ⚋→⚊'; changing = true; }
+
+      coins[0].textContent = tosses[0]; coins[1].textContent = tosses[1]; coins[2].textContent = tosses[2];
+
+      zyLines.push({ value, changing });
+      zyCastCount++;
+      document.getElementById('zy-hint').textContent = label + ' — 第' + zyCastCount + '爻 (' + (6 - zyCastCount) + '次剩余)';
+
+      // 渲染爻线（从下往上）
+      const linesEl = document.getElementById('zy-lines');
+      const row = document.createElement('div');
+      row.className = 'zy-line-row';
+      const sym = value === 7 || value === 9 ? '━━━' : '━  ━';
+      row.innerHTML = `
+        <span class="zy-line-num">${['初','二','三','四','五','上'][zyLines.length - 1]}</span>
+        <span class="zy-line-symbol ${changing ? 'zy-line-changing' : ''}">${sym}</span>
+        <span class="zy-line-label ${changing ? 'zy-line-changing' : ''}">${label}</span>
+      `;
+      linesEl.appendChild(row);
+
+      if (zyCastCount >= 6) {
+        document.getElementById('btn-cast').disabled = true;
+        document.getElementById('zy-hint').textContent = '六爻已成，解读卦象...';
+        setTimeout(showHexagramResult, 800);
+      }
+    }, 600);
+  });
+
+  function showHexagramResult() {
+    const lowerTri = (zyLines[0].value%2===1?1:0) + (zyLines[1].value%2===1?2:0) + (zyLines[2].value%2===1?4:0);
+    const upperTri = (zyLines[3].value%2===1?1:0) + (zyLines[4].value%2===1?2:0) + (zyLines[5].value%2===1?4:0);
+    const lowerTriNew = zyLines.slice(0,3).reduce((a,l,i) => {
+      const v = l.changing ? (l.value===9?8:7) : l.value;
+      return a + (v%2===1 ? [1,2,4][i] : 0);
+    }, 0);
+    const upperTriNew = zyLines.slice(3,6).reduce((a,l,i) => {
+      const v = l.changing ? (l.value===9?8:7) : l.value;
+      return a + (v%2===1 ? [1,2,4][i] : 0);
+    }, 0);
+
+    const orig = getHexagramData(lowerTri, upperTri);
+    const hasChanging = zyLines.some(l => l.changing);
+    const changed = hasChanging ? getHexagramData(lowerTriNew, upperTriNew) : null;
+
+    document.getElementById('zy-cast').style.display = 'none';
+
+    const hexEl = document.getElementById('zy-hexagrams');
+    const syms = zyLines.map(l => l.value%2===1 ? '━━━' : '━  ━').reverse().join('<br>');
+    hexEl.innerHTML = `
+      <div class="zy-hex">
+        <div class="zy-hex-label">本卦</div>
+        <div class="zy-hex-lines">${syms}</div>
+        <div class="zy-hex-name">${orig.name}卦 ${TRIGRAMS[lowerTri]}上${TRIGRAMS[upperTri]}下</div>
+      </div>
+      ${changed ? `
+      <div class="zy-hex">
+        <div class="zy-hex-label">之卦</div>
+        <div class="zy-hex-lines">${zyLines.map(l => l.changing ? (l.value===9?'━  ━':'━━━') : (l.value%2===1?'━━━':'━  ━')).reverse().join('<br>')}</div>
+        <div class="zy-hex-name">${changed.name}卦</div>
+      </div>` : ''}
+    `;
+
+    document.getElementById('zy-reading').innerHTML = `
+      <h3>${orig.name}卦 · 卦辞</h3>
+      <p>${orig.judge}</p>
+      <p>${orig.desc}</p>
+      ${changed ? `<h3 style="margin-top:1rem;">之卦 · ${changed.name}卦</h3><p>${changed.judge}</p><p>${changed.desc}</p>` : ''}
+      ${hasChanging ? '<p style="margin-top:1rem;color:#e0c878;">变爻提示：本卦中动爻已变，之卦为发展趋向。</p>' : '<p style="margin-top:1rem;color:var(--text-dim);">本卦无动爻，静卦。</p>'}
+    `;
+
+    document.getElementById('zhouyi-result').style.display = 'block';
+  }
+
+  document.getElementById('btn-recast').addEventListener('click', () => {
+    zyCastCount = 0; zyLines = [];
+    document.getElementById('zy-lines').innerHTML = '';
+    document.getElementById('zy-hint').textContent = '默念心中所问，点击投掷六次';
+    document.getElementById('btn-cast').disabled = false;
+    document.getElementById('zy-cast').style.display = 'block';
+    document.getElementById('zhouyi-result').style.display = 'none';
+  });
+
 });
